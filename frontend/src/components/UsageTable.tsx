@@ -7,7 +7,6 @@ import { useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
   flexRender,
   ColumnDef,
   SortingState,
@@ -15,7 +14,9 @@ import {
 import { format } from 'date-fns';
 import { UsageItem } from '../types';
 import { useSortState } from '../hooks/useSortState';
-import { SortDirection } from '../types';
+
+// Columns that support sorting
+const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
 
 interface UsageTableProps {
   data: UsageItem[];
@@ -140,7 +141,7 @@ export function UsageTable({ data }: UsageTableProps) {
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
-                const isSortable = header.column.getCanSort();
+                const isSortable = SORTABLE_COLUMNS.includes(header.column.id);
                 return (
                   <th
                     key={header.id}

@@ -21,7 +21,7 @@ This project consists of:
 ### Prerequisites
 
 - Python 3.9+ 
-- Node.js 18+ and npm
+- Node.js 18+ and pnpm
 - pip (Python package manager)
 
 ### Backend Setup
@@ -54,12 +54,12 @@ cd frontend
 
 2. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
 3. Run the development server:
 ```bash
-npm run dev
+pnpm dev
 ```
 
 The frontend will be available at `http://localhost:3000`
@@ -75,7 +75,7 @@ uvicorn main:app --reload
 2. Start the frontend server (in another terminal):
 ```bash
 cd frontend
-npm run dev
+pnpm dev
 ```
 
 3. Open your browser to `http://localhost:3000`

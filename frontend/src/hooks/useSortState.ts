@@ -31,9 +31,9 @@ export function useSortState() {
     const newSortState = [...sortState];
     const existingIndex = newSortState.findIndex((s) => s.field === field);
 
-    // Determine next direction: asc -> desc -> none
+    // Determine next direction: none -> asc -> desc -> none (3-click cycle)
     let nextDirection: SortDirection;
-    if (currentDirection === 'none' || currentDirection === 'desc') {
+    if (currentDirection === 'none') {
       nextDirection = 'asc';
     } else if (currentDirection === 'asc') {
       nextDirection = 'desc';
