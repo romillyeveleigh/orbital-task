@@ -1,6 +1,6 @@
 /**
  * Table component for displaying usage data with sorting.
- * Uses TanStack Table for robust multi-column sorting.
+ * Features premium dark theme styling with smooth animations.
  */
 
 import { useMemo } from 'react';
@@ -16,14 +16,17 @@ import { UsageItem } from '../types';
 import { useSortState } from '../hooks/useSortState';
 
 /**
- * Format an ISO 8601 timestamp to DD-MM-YYYY HH:MM in UTC.
- * Uses UTC to match the API contract example exactly.
+ * Format an ISO 8601 timestamp to a readable format in UTC.
  */
-function formatTimestampUTC(isoTimestamp: string): string {
+function formatTimestampUTC(isoTimestamp: string): { date: string; time: string } {
   try {
-    return formatInTimeZone(new Date(isoTimestamp), 'UTC', 'dd-MM-yyyy HH:mm');
+    const d = new Date(isoTimestamp);
+    return {
+      date: formatInTimeZone(d, 'UTC', 'dd MMM yyyy'),
+      time: formatInTimeZone(d, 'UTC', 'HH:mm'),
+    };
   } catch {
-    return isoTimestamp;
+    return { date: isoTimestamp, time: '' };
   }
 }
 
@@ -32,6 +35,28 @@ const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
 
 interface UsageTableProps {
   data: UsageItem[];
+}
+
+// Sort indicator component
+function SortIndicator({ direction }: { direction: 'asc' | 'desc' | 'none' }) {
+  if (direction === 'none') {
+    return (
+      <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+      </svg>
+    );
+  }
+  
+  return (
+    <svg 
+      className={`w-4 h-4 text-orbital-400 transition-transform duration-200 ${direction === 'desc' ? 'rotate-180' : ''}`} 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+    </svg>
+  );
 }
 
 export function UsageTable({ data }: UsageTableProps) {
@@ -53,12 +78,22 @@ export function UsageTable({ data }: UsageTableProps) {
       {
         accessorKey: 'id',
         header: 'Message ID',
-        cell: (info) => info.getValue(),
+        cell: (info) => (
+          <span className="font-mono text-slate-400 text-sm">#{info.getValue() as number}</span>
+        ),
       },
       {
         accessorKey: 'timestamp',
         header: 'Timestamp',
-        cell: (info) => formatTimestampUTC(info.getValue() as string),
+        cell: (info) => {
+          const { date, time } = formatTimestampUTC(info.getValue() as string);
+          return (
+            <div className="flex flex-col">
+              <span className="text-slate-200">{date}</span>
+              <span className="text-slate-500 text-xs">{time} UTC</span>
+            </div>
+          );
+        },
       },
       {
         accessorKey: 'report_name',
@@ -66,7 +101,15 @@ export function UsageTable({ data }: UsageTableProps) {
         enableSorting: true,
         cell: (info) => {
           const value = info.getValue() as string | undefined;
-          return value || '';
+          if (!value) {
+            return <span className="text-slate-600 italic">—</span>;
+          }
+          return (
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-orbital-500 flex-shrink-0"></span>
+              <span className="text-slate-200">{value}</span>
+            </div>
+          );
         },
       },
       {
@@ -75,7 +118,11 @@ export function UsageTable({ data }: UsageTableProps) {
         enableSorting: true,
         cell: (info) => {
           const value = info.getValue() as number;
-          return value.toFixed(2);
+          return (
+            <span className="font-mono text-orbital-300 font-medium">
+              {value.toFixed(2)}
+            </span>
+          );
         },
       },
     ],
@@ -104,12 +151,8 @@ export function UsageTable({ data }: UsageTableProps) {
           continue;
         }
 
-        if (aValue < bValue) {
-          return sort.desc ? 1 : -1;
-        }
-        if (aValue > bValue) {
-          return sort.desc ? -1 : 1;
-        }
+        if (aValue < bValue) return sort.desc ? 1 : -1;
+        if (aValue > bValue) return sort.desc ? -1 : 1;
       }
       return 0;
     });
@@ -119,7 +162,7 @@ export function UsageTable({ data }: UsageTableProps) {
     data: sortedData,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    manualSorting: true, // We handle sorting manually via URL state
+    manualSorting: true,
   });
 
   // Handle column header click
@@ -128,33 +171,25 @@ export function UsageTable({ data }: UsageTableProps) {
     updateSort(columnId, currentDirection);
   };
 
-  // Get sort icon for a column
-  const getSortIcon = (columnId: string) => {
-    const direction = getSortDirection(columnId);
-    if (direction === 'asc') {
-      return '↑';
-    } else if (direction === 'desc') {
-      return '↓';
-    }
-    return '↕';
-  };
-
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-        <thead className="bg-gray-50">
+    <div className="overflow-x-auto rounded-xl">
+      <table className="min-w-full">
+        <thead>
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
+            <tr key={headerGroup.id} className="border-b border-surface-800">
               {headerGroup.headers.map((header) => {
                 const isSortable = SORTABLE_COLUMNS.includes(header.column.id);
+                const direction = getSortDirection(header.column.id);
+                const isActive = direction !== 'none';
+                
                 return (
                   <th
                     key={header.id}
-                    className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                    className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider transition-colors duration-200 ${
                       isSortable
-                        ? 'cursor-pointer hover:bg-gray-100 select-none'
+                        ? 'cursor-pointer hover:bg-surface-800/50 select-none'
                         : ''
-                    }`}
+                    } ${isActive ? 'text-orbital-400' : 'text-slate-500'}`}
                     onClick={() => isSortable && handleSort(header.column.id)}
                     aria-label={
                       isSortable
@@ -168,9 +203,7 @@ export function UsageTable({ data }: UsageTableProps) {
                         header.getContext()
                       )}
                       {isSortable && (
-                        <span className="text-gray-400" aria-hidden="true">
-                          {getSortIcon(header.column.id)}
-                        </span>
+                        <SortIndicator direction={direction} />
                       )}
                     </div>
                   </th>
@@ -179,13 +212,17 @@ export function UsageTable({ data }: UsageTableProps) {
             </tr>
           ))}
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-gray-50">
+        <tbody className="divide-y divide-surface-800/50">
+          {table.getRowModel().rows.map((row, index) => (
+            <tr 
+              key={row.id} 
+              className="table-row-animate group"
+              style={{ animationDelay: `${index * 20}ms` }}
+            >
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                  className="px-4 py-4 text-sm"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
@@ -194,7 +231,25 @@ export function UsageTable({ data }: UsageTableProps) {
           ))}
         </tbody>
       </table>
+      
+      {/* Table footer with row count */}
+      <div className="px-4 py-3 border-t border-surface-800 bg-surface-900/30">
+        <p className="text-xs text-slate-500">
+          Showing <span className="text-slate-400 font-medium">{sortedData.length}</span> entries
+          {sortingState.length > 0 && (
+            <span className="ml-2">
+              • Sorted by{' '}
+              {sortingState.map((s, i) => (
+                <span key={s.id}>
+                  {i > 0 && ', '}
+                  <span className="text-orbital-400">{s.id.replace('_', ' ')}</span>
+                  <span className="text-slate-600"> ({s.desc ? 'desc' : 'asc'})</span>
+                </span>
+              ))}
+            </span>
+          )}
+        </p>
+      </div>
     </div>
   );
 }
-
