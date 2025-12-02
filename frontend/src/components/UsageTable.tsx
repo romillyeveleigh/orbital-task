@@ -11,9 +11,21 @@ import {
   ColumnDef,
   SortingState,
 } from '@tanstack/react-table';
-import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { UsageItem } from '../types';
 import { useSortState } from '../hooks/useSortState';
+
+/**
+ * Format an ISO 8601 timestamp to DD-MM-YYYY HH:MM in UTC.
+ * Uses UTC to match the API contract example exactly.
+ */
+function formatTimestampUTC(isoTimestamp: string): string {
+  try {
+    return formatInTimeZone(new Date(isoTimestamp), 'UTC', 'dd-MM-yyyy HH:mm');
+  } catch {
+    return isoTimestamp;
+  }
+}
 
 // Columns that support sorting
 const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
@@ -46,14 +58,7 @@ export function UsageTable({ data }: UsageTableProps) {
       {
         accessorKey: 'timestamp',
         header: 'Timestamp',
-        cell: (info) => {
-          const timestamp = info.getValue() as string;
-          try {
-            return format(new Date(timestamp), 'dd-MM-yyyy HH:mm');
-          } catch {
-            return timestamp;
-          }
-        },
+        cell: (info) => formatTimestampUTC(info.getValue() as string),
       },
       {
         accessorKey: 'report_name',
