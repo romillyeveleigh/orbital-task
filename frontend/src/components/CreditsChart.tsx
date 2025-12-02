@@ -58,6 +58,7 @@ function generateDateRange(startDate: Date, endDate: Date): Date[] {
 }
 
 export function CreditsChart({ data }: CreditsChartProps) {
+  console.log('data', data);
   // Group data by date and sum credits, filling in missing dates with 0
   const chartData = useMemo<ChartDataPoint[]>(() => {
     if (data.length === 0) return [];
