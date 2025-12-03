@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
 import { UsageItem } from '../types';
-import { useSortState } from '../hooks/useSortState';
+import { useSortState } from '../hooks';
 
 const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
 

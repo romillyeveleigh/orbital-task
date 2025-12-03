@@ -4,7 +4,7 @@
  */
 
 import { BrowserRouter } from 'react-router-dom';
-import { Dashboard } from './components/Dashboard';
+import { Dashboard } from './components';
 
 function App() {
   return (

@@ -17,7 +17,10 @@ export async function fetchUsage(): Promise<UsageResponse> {
     const data: UsageResponse = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching usage data:', error);
+    // Avoid leaking internal details in production
+    if (import.meta.env.DEV) {
+      console.error('Error fetching usage data:', error);
+    }
     throw error;
   }
 }

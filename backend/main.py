@@ -3,10 +3,14 @@ FastAPI application for Orbital Copilot usage tracking API.
 """
 
 import logging
+import os
 from typing import List
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from models import UsageItem, UsageResponse
 from api_client import fetch_messages, fetch_reports_batch
@@ -16,26 +20,40 @@ from credit_calculator import calculate_credits_from_text
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Rate limiting configuration
+limiter = Limiter(key_func=get_remote_address)
+RATE_LIMIT = os.getenv("RATE_LIMIT", "60/minute")
+
 app = FastAPI(
     title="Orbital Copilot Usage API",
     description="API for tracking credit usage in Orbital Copilot",
     version="1.0.0"
 )
 
-# Add CORS middleware for frontend
+# Register rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS configuration
+# In production, set ALLOWED_ORIGINS env var to comma-separated list of allowed origins
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET"],  # Only allow necessary methods
+    allow_headers=["Content-Type"],
 )
 
 
 @app.get("/usage", response_model=UsageResponse, response_model_exclude_none=True)
-async def get_usage():
+@limiter.limit(RATE_LIMIT)
+async def get_usage(request: Request):
     """
     Get usage data for the current billing period.
+    
+    Rate limited to prevent abuse (default: 60 requests/minute).
     
     Returns:
         UsageResponse with list of usage items, each containing:
@@ -119,7 +137,8 @@ async def get_usage():
 
 
 @app.get("/")
-async def root():
+@limiter.limit("120/minute")
+async def root(request: Request):
     """Health check endpoint."""
     return {"status": "ok", "message": "Orbital Copilot Usage API"}
 

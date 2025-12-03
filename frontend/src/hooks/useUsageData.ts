@@ -4,7 +4,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchUsage } from '../services/api';
+import { fetchUsage } from '../services';
 import { UsageResponse } from '../types';
 
 export function useUsageData() {

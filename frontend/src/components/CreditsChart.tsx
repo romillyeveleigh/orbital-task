@@ -103,16 +103,16 @@ export function CreditsChart({ data }: CreditsChartProps) {
 
   if (chartData.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 bg-surface-100 rounded-xl border border-surface-200">
+      <div className="flex items-center justify-center h-64 bg-surface-100 rounded-xl border border-surface-200" role="status" aria-live="polite">
         <p className="text-surface-600">No data to display</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-72">
+    <div className="w-full h-72" role="img" aria-label="Bar chart showing daily credits consumption">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }} aria-label="Daily credits consumption chart">
           <defs>
             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
