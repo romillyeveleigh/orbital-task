@@ -79,7 +79,7 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
                 const canSort = header.column.getCanSort();
                 const isSorted = header.column.getIsSorted();
                 const sortIndex = header.column.getSortIndex();
-                const sortDirection = isSorted === false ? 'none' : (isSorted === 'asc' ? 'asc' : 'desc');
+                const sortDirection = isSorted || 'none';
                 const toggleHandler = header.column.getToggleSortingHandler();
                 
                 return (

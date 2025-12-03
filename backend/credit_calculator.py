@@ -33,7 +33,7 @@ def calculate_credits_from_text(text: str) -> float:
     
     # Calculate credits: (tokens / 100) * base_rate
     # Use configurable base_model_rate (default: 40 credits per 100 tokens)
-    base_model_rate = float(os.getenv("BASE_MODEL_RATE", str(BASE_MODEL_RATE)))
+    base_model_rate = float(os.getenv("BASE_MODEL_RATE", BASE_MODEL_RATE))
     credits = (estimated_tokens / 100) * base_model_rate
     
     # Apply minimum cost of 1.00

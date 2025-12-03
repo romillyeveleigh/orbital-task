@@ -4,9 +4,9 @@
  * Converts between URL format and TanStack Table's SortingState format.
  */
 
-import { useSearchParams } from 'react-router-dom';
-import { useMemo, useCallback } from 'react';
-import { SortingState } from '@tanstack/react-table';
+import { useSearchParams } from "react-router-dom";
+import { useMemo, useCallback } from "react";
+import { SortingState } from "@tanstack/react-table";
 
 /**
  * Converts URL sort param format (field:direction,field:direction) to TanStack SortingState
@@ -16,20 +16,23 @@ function urlToSortingState(sortParam: string | null): SortingState {
     return [];
   }
 
-  return sortParam.split(',').map((item) => {
-    const [id, direction] = item.split(':');
-    return {
-      id,
-      desc: direction === 'desc',
-    };
-  }).filter((s): s is { id: string; desc: boolean } => s.id !== undefined);
+  return sortParam
+    .split(",")
+    .map((item) => {
+      const [id, direction] = item.split(":");
+      return {
+        id,
+        desc: direction === "desc",
+      };
+    })
+    .filter((s): s is { id: string; desc: boolean } => s.id !== undefined);
 }
 
 /**
  * Converts TanStack SortingState to URL sort param format
  */
 function sortingStateToUrl(sorting: SortingState): string {
-  return sorting.map((s) => `${s.id}:${s.desc ? 'desc' : 'asc'}`).join(',');
+  return sorting.map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`).join(",");
 }
 
 export function useSortState() {
@@ -37,26 +40,29 @@ export function useSortState() {
 
   // Parse sort state from URL in TanStack format
   const sorting = useMemo<SortingState>(() => {
-    const sortParam = searchParams.get('sort');
+    const sortParam = searchParams.get("sort");
     return urlToSortingState(sortParam);
   }, [searchParams]);
 
   // Update URL when sorting state changes
-  const setSorting = useCallback((updater: SortingState | ((prev: SortingState) => SortingState)) => {
-    const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
-    
-    const newParams = new URLSearchParams(searchParams);
-    if (newSorting.length === 0) {
-      newParams.delete('sort');
-    } else {
-      newParams.set('sort', sortingStateToUrl(newSorting));
-    }
-    setSearchParams(newParams, { replace: true });
-  }, [sorting, searchParams, setSearchParams]);
+  const setSorting = useCallback(
+    (updater: SortingState | ((prev: SortingState) => SortingState)) => {
+      const newSorting =
+        typeof updater === "function" ? updater(sorting) : updater;
+
+      const newParams = new URLSearchParams(searchParams);
+      if (newSorting.length === 0) {
+        newParams.delete("sort");
+      } else {
+        newParams.set("sort", sortingStateToUrl(newSorting));
+      }
+      setSearchParams(newParams, { replace: true });
+    },
+    [sorting, searchParams, setSearchParams]
+  );
 
   return {
     sorting,
     setSorting,
   };
 }
-
