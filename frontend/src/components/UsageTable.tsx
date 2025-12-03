@@ -15,15 +15,13 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { UsageItem } from '../types';
 import { useSortState } from '../hooks/useSortState';
 
-function formatTimestampUTC(isoTimestamp: string): { date: string; time: string } {
+function formatTimestampUTC(isoTimestamp: string): string {
   try {
     const d = new Date(isoTimestamp);
-    return {
-      date: formatInTimeZone(d, 'UTC', 'dd MMM yyyy'),
-      time: formatInTimeZone(d, 'UTC', 'HH:mm'),
-    };
+    // Format: DD-MM-YYYY HH:mm (as per spec)
+    return formatInTimeZone(d, 'UTC', 'dd-MM-yyyy HH:mm');
   } catch {
-    return { date: isoTimestamp, time: '' };
+    return isoTimestamp;
   }
 }
 
@@ -78,15 +76,11 @@ export function UsageTable({ data }: UsageTableProps) {
       {
         accessorKey: 'timestamp',
         header: 'Timestamp',
-        cell: (info) => {
-          const { date, time } = formatTimestampUTC(info.getValue() as string);
-          return (
-            <div className="flex flex-col">
-              <span className="text-surface-800">{date}</span>
-              <span className="text-surface-600 text-xs">{time} UTC</span>
-            </div>
-          );
-        },
+        cell: (info) => (
+          <span className="text-surface-800">
+            {formatTimestampUTC(info.getValue() as string)}
+          </span>
+        ),
       },
       {
         accessorKey: 'report_name',
