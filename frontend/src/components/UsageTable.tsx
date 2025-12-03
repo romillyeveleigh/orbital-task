@@ -1,146 +1,82 @@
 /**
  * Table component for displaying usage data with sorting.
- * Light theme styling for client-facing use.
  */
 
 import { useMemo } from 'react';
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  ColumnDef,
-  SortingState,
-} from '@tanstack/react-table';
+import { useReactTable, getCoreRowModel, flexRender, ColumnDef } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
 import { UsageItem } from '../types';
 import { useSortState } from '../hooks/useSortState';
 
-function formatTimestampUTC(isoTimestamp: string): string {
+const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
+
+function formatTimestamp(isoTimestamp: string): string {
   try {
-    const d = new Date(isoTimestamp);
-    // Format: DD-MM-YYYY HH:mm (as per spec)
-    return formatInTimeZone(d, 'UTC', 'dd-MM-yyyy HH:mm');
+    return formatInTimeZone(new Date(isoTimestamp), 'UTC', 'dd-MM-yyyy HH:mm');
   } catch {
     return isoTimestamp;
   }
 }
 
-const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
+export function UsageTable({ data }: { data: UsageItem[] }) {
+  const { sortState, toggleSort, getSortDirection } = useSortState();
 
-interface UsageTableProps {
-  data: UsageItem[];
-}
-
-function SortIndicator({ direction }: { direction: 'asc' | 'desc' | 'none' }) {
-  if (direction === 'none') {
-    return (
-      <svg className="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-      </svg>
-    );
-  }
-  
-  return (
-    <svg 
-      className={`w-4 h-4 text-accent-600 transition-transform duration-200 ${direction === 'desc' ? 'rotate-180' : ''}`} 
-      fill="none" 
-      viewBox="0 0 24 24" 
-      stroke="currentColor"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-    </svg>
+  const activeSorts = useMemo(() => 
+    sortState
+      .filter(s => s.direction !== 'none')
+      .map(s => ({ id: s.field, desc: s.direction === 'desc' })),
+    [sortState]
   );
-}
 
-export function UsageTable({ data }: UsageTableProps) {
-  const { sortState, updateSort, getSortDirection } = useSortState();
-
-  const sortingState: SortingState = useMemo(() => {
-    return sortState
-      .filter((s) => s.direction !== 'none')
-      .map((s) => ({
-        id: s.field,
-        desc: s.direction === 'desc',
-      }));
-  }, [sortState]);
-
-  const columns = useMemo<ColumnDef<UsageItem>[]>(
-    () => [
-      {
-        accessorKey: 'id',
-        header: 'Message ID',
-        cell: (info) => (
-          <span className="font-mono text-surface-500 text-sm">#{info.getValue() as number}</span>
-        ),
+  const columns = useMemo<ColumnDef<UsageItem>[]>(() => [
+    {
+      accessorKey: 'id',
+      header: 'Message ID',
+      cell: info => <span className="font-mono text-surface-500 text-sm">#{info.getValue() as number}</span>,
+    },
+    {
+      accessorKey: 'timestamp',
+      header: 'Timestamp',
+      cell: info => <span className="text-surface-800">{formatTimestamp(info.getValue() as string)}</span>,
+    },
+    {
+      accessorKey: 'report_name',
+      header: 'Report Name',
+      cell: info => {
+        const value = info.getValue() as string | undefined;
+        if (!value) return <span className="text-surface-400 italic">—</span>;
+        return (
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-accent-500" />
+            <span className="text-surface-800">{value}</span>
+          </div>
+        );
       },
-      {
-        accessorKey: 'timestamp',
-        header: 'Timestamp',
-        cell: (info) => (
-          <span className="text-surface-800">
-            {formatTimestampUTC(info.getValue() as string)}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'report_name',
-        header: 'Report Name',
-        enableSorting: true,
-        cell: (info) => {
-          const value = info.getValue() as string | undefined;
-          if (!value) {
-            return <span className="text-surface-400 italic" aria-label="No report">—</span>;
-          }
-          return (
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-accent-500 flex-shrink-0"></span>
-              <span className="text-surface-800">{value}</span>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: 'credits_used',
-        header: 'Credits Used',
-        enableSorting: true,
-        cell: (info) => {
-          const value = info.getValue() as number;
-          return (
-            <span className="font-mono text-accent-700 font-medium">
-              {value.toFixed(2)}
-            </span>
-          );
-        },
-      },
-    ],
-    []
-  );
+    },
+    {
+      accessorKey: 'credits_used',
+      header: 'Credits Used',
+      cell: info => (
+        <span className="font-mono text-accent-700 font-medium">
+          {(info.getValue() as number).toFixed(2)}
+        </span>
+      ),
+    },
+  ], []);
 
   const sortedData = useMemo(() => {
-    if (sortingState.length === 0) return data;
+    if (activeSorts.length === 0) return data;
 
     return [...data].sort((a, b) => {
-      for (const sort of sortingState) {
-        const field = sort.id;
-        let aValue: any;
-        let bValue: any;
-
-        if (field === 'report_name') {
-          aValue = a.report_name || '';
-          bValue = b.report_name || '';
-        } else if (field === 'credits_used') {
-          aValue = a.credits_used;
-          bValue = b.credits_used;
-        } else {
-          continue;
-        }
-
-        if (aValue < bValue) return sort.desc ? 1 : -1;
-        if (aValue > bValue) return sort.desc ? -1 : 1;
+      for (const sort of activeSorts) {
+        const aVal = sort.id === 'report_name' ? (a.report_name || '') : a.credits_used;
+        const bVal = sort.id === 'report_name' ? (b.report_name || '') : b.credits_used;
+        if (aVal < bVal) return sort.desc ? 1 : -1;
+        if (aVal > bVal) return sort.desc ? -1 : 1;
       }
       return 0;
     });
-  }, [data, sortingState]);
+  }, [data, activeSorts]);
 
   const table = useReactTable({
     data: sortedData,
@@ -149,34 +85,42 @@ export function UsageTable({ data }: UsageTableProps) {
     manualSorting: true,
   });
 
-  const handleSort = (columnId: string) => {
-    const currentDirection = getSortDirection(columnId);
-    updateSort(columnId, currentDirection);
+  const renderSortIcon = (direction: 'asc' | 'desc' | 'none') => {
+    if (direction === 'none') {
+      return (
+        <svg className="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return (
+      <svg className={`w-4 h-4 text-accent-600 ${direction === 'desc' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    );
   };
 
   return (
     <div className="overflow-x-auto rounded-xl">
       <table className="min-w-full">
         <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
+          {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id} className="border-b border-surface-200">
-              {headerGroup.headers.map((header) => {
+              {headerGroup.headers.map(header => {
                 const isSortable = SORTABLE_COLUMNS.includes(header.column.id);
                 const direction = getSortDirection(header.column.id);
-                const isActive = direction !== 'none';
                 
                 return (
                   <th
                     key={header.id}
-                    className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider transition-colors duration-200 ${
+                    className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider transition-colors ${
                       isSortable ? 'cursor-pointer hover:bg-surface-100 select-none' : ''
-                    } ${isActive ? 'text-accent-700' : 'text-surface-600'}`}
-                    onClick={() => isSortable && handleSort(header.column.id)}
-                    aria-label={isSortable ? `Sort by ${header.column.id}` : undefined}
+                    } ${direction !== 'none' ? 'text-accent-700' : 'text-surface-600'}`}
+                    onClick={() => isSortable && toggleSort(header.column.id)}
                   >
                     <div className="flex items-center gap-2">
                       {flexRender(header.column.columnDef.header, header.getContext())}
-                      {isSortable && <SortIndicator direction={direction} />}
+                      {isSortable && renderSortIcon(direction)}
                     </div>
                   </th>
                 );
@@ -185,9 +129,9 @@ export function UsageTable({ data }: UsageTableProps) {
           ))}
         </thead>
         <tbody className="divide-y divide-surface-200">
-          {table.getRowModel().rows.map((row, index) => (
-            <tr key={row.id} className="table-row-animate" style={{ animationDelay: `${index * 20}ms` }}>
-              {row.getVisibleCells().map((cell) => (
+          {table.getRowModel().rows.map((row, i) => (
+            <tr key={row.id} className="table-row-animate" style={{ animationDelay: `${i * 20}ms` }}>
+              {row.getVisibleCells().map(cell => (
                 <td key={cell.id} className="px-4 py-4 text-sm">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
@@ -200,10 +144,10 @@ export function UsageTable({ data }: UsageTableProps) {
       <div className="px-4 py-3 border-t border-surface-200 bg-surface-50">
         <p className="text-xs text-surface-600">
           Showing <span className="text-surface-800 font-medium">{sortedData.length}</span> entries
-          {sortingState.length > 0 && (
+          {activeSorts.length > 0 && (
             <span className="ml-2">
               • Sorted by{' '}
-              {sortingState.map((s, i) => (
+              {activeSorts.map((s, i) => (
                 <span key={s.id}>
                   {i > 0 && ', '}
                   <span className="text-accent-700">{s.id.replace('_', ' ')}</span>

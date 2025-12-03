@@ -26,31 +26,25 @@ export function useSortState() {
     }).filter((s): s is SortState => s.field !== undefined && s.direction !== undefined);
   }, [searchParams]);
 
-  // Update sort state in URL
-  const updateSort = useCallback((field: string, currentDirection: SortDirection) => {
+  // Toggle sort state for a field (none -> asc -> desc -> none)
+  const toggleSort = useCallback((field: string) => {
     const newSortState = [...sortState];
     const existingIndex = newSortState.findIndex((s) => s.field === field);
+    const currentDirection = existingIndex >= 0 
+      ? newSortState[existingIndex].direction 
+      : 'none';
 
-    // Determine next direction: none -> asc -> desc -> none (3-click cycle)
-    let nextDirection: SortDirection;
-    if (currentDirection === 'none') {
-      nextDirection = 'asc';
-    } else if (currentDirection === 'asc') {
-      nextDirection = 'desc';
-    } else {
-      nextDirection = 'none';
-    }
+    const nextDirection: SortDirection =
+      currentDirection === 'none' ? 'asc' :
+      currentDirection === 'asc' ? 'desc' : 'none';
 
     if (existingIndex >= 0) {
       if (nextDirection === 'none') {
-        // Remove sort if going back to none
         newSortState.splice(existingIndex, 1);
       } else {
-        // Update existing sort
         newSortState[existingIndex] = { field, direction: nextDirection };
       }
     } else {
-      // Add new sort
       newSortState.push({ field, direction: nextDirection });
     }
 
@@ -59,10 +53,7 @@ export function useSortState() {
     if (newSortState.length === 0) {
       newParams.delete('sort');
     } else {
-      newParams.set(
-        'sort',
-        newSortState.map((s) => `${s.field}:${s.direction}`).join(',')
-      );
+      newParams.set('sort', newSortState.map((s) => `${s.field}:${s.direction}`).join(','));
     }
     setSearchParams(newParams, { replace: true });
   }, [sortState, searchParams, setSearchParams]);
@@ -75,7 +66,7 @@ export function useSortState() {
 
   return {
     sortState,
-    updateSort,
+    toggleSort,
     getSortDirection,
   };
 }

@@ -1,105 +1,40 @@
 /**
  * Main dashboard component for Orbital Copilot usage tracking.
- * Clean light theme for client-facing use.
  */
 
+import { useMemo } from 'react';
 import { CreditsChart } from './CreditsChart';
 import { UsageTable } from './UsageTable';
+import { StatCard } from './StatCard';
+import { BackgroundGraphics } from './BackgroundGraphics';
+import { ExportButton } from './ExportButton';
 import { useUsageData } from '../hooks/useUsageData';
-import { UsageItem } from '../types';
-
-/**
- * Export usage data to CSV and trigger download.
- */
-function exportToCSV(data: UsageItem[], filename: string) {
-  // CSV headers
-  const headers = ['Message ID', 'Timestamp', 'Report Name', 'Credits Used'];
-  
-  // Convert data to CSV rows
-  const rows = data.map(item => [
-    item.id,
-    item.timestamp,
-    item.report_name || '',
-    item.credits_used.toFixed(2)
-  ]);
-  
-  // Combine headers and rows
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-  ].join('\n');
-  
-  // Create blob and download
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
-function StatCard({ 
-  label, 
-  value, 
-  suffix = '',
-  delay = 0,
-  highlight = false
-}: { 
-  label: string; 
-  value: string | number; 
-  suffix?: string;
-  delay?: number;
-  highlight?: boolean;
-}) {
-  return (
-    <div 
-      className="glass-card-gradient p-5 opacity-0 animate-fade-in-up"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <p className="text-sm text-surface-600 font-medium mb-1">{label}</p>
-      <p className={`text-2xl font-semibold font-mono ${highlight ? 'gradient-text-hero' : 'text-surface-900'}`}>
-        {value}
-        {suffix && <span className="text-surface-500 text-lg ml-1">{suffix}</span>}
-      </p>
-    </div>
-  );
-}
-
-// Background decoration component - scrolls with page
-function BackgroundGraphics() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      {/* Top right gradient blob */}
-      <div className="absolute -top-20 -right-20 w-[500px] h-[500px] bg-accent-400/20 rounded-full blur-3xl" />
-      
-      {/* Mid-page gradient blob */}
-      <div className="absolute top-[600px] -left-32 w-[400px] h-[400px] bg-accent-500/15 rounded-full blur-3xl" />
-      
-      {/* Bottom gradient blob */}
-      <div className="absolute bottom-[200px] -right-20 w-[450px] h-[450px] bg-accent-400/15 rounded-full blur-3xl" />
-      
-      {/* Center accent */}
-      <div className="absolute top-[400px] right-1/3 w-80 h-80 bg-gradient-to-br from-accent-300/10 to-transparent rounded-full blur-2xl" />
-      
-      {/* Subtle dot pattern - covers full height */}
-      <div 
-        className="absolute inset-0 opacity-[0.4]"
-        style={{
-          backgroundImage: `radial-gradient(#3b82f6 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-        }}
-      />
-      
-    </div>
-  );
-}
 
 export function Dashboard() {
   const { data, isLoading, error } = useUsageData();
+
+  // Calculate stats and billing period from data
+  const { stats, billingPeriod, formatDate } = useMemo(() => {
+    if (data.length === 0) {
+      return { stats: null, billingPeriod: '', formatDate: () => '' };
+    }
+
+    const totalCredits = data.reduce((sum, item) => sum + item.credits_used, 0);
+    const totalMessages = data.length;
+    const reportsGenerated = data.filter(item => item.report_name).length;
+    const avgCreditsPerMessage = totalCredits / totalMessages;
+
+    const dates = data.map(item => new Date(item.timestamp)).sort((a, b) => a.getTime() - b.getTime());
+    const startDate = dates[0];
+    const endDate = dates[dates.length - 1];
+    const formatDateFn = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    return {
+      stats: { totalCredits, totalMessages, reportsGenerated, avgCreditsPerMessage, startDate, endDate },
+      billingPeriod: `${formatDateFn(startDate)} – ${formatDateFn(endDate)}`,
+      formatDate: formatDateFn,
+    };
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -107,10 +42,10 @@ export function Dashboard() {
         <BackgroundGraphics />
         <div className="text-center relative z-10">
           <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full border-2 border-accent-200"></div>
-            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-accent-500 animate-spin"></div>
-            <div className="absolute inset-2 rounded-full border-2 border-transparent border-t-accent-400 animate-spin" style={{ animationDuration: '0.8s', animationDirection: 'reverse' }}></div>
-            <div className="absolute inset-4 rounded-full bg-accent-100 animate-pulse"></div>
+            <div className="absolute inset-0 rounded-full border-2 border-accent-200" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-accent-500 animate-spin" />
+            <div className="absolute inset-2 rounded-full border-2 border-transparent border-t-accent-400 animate-spin" style={{ animationDuration: '0.8s', animationDirection: 'reverse' }} />
+            <div className="absolute inset-4 rounded-full bg-accent-100 animate-pulse" />
           </div>
           <p className="text-surface-600 font-medium">Loading usage data...</p>
         </div>
@@ -137,7 +72,7 @@ export function Dashboard() {
     );
   }
 
-  if (data.length === 0) {
+  if (!stats) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <BackgroundGraphics />
@@ -154,21 +89,10 @@ export function Dashboard() {
     );
   }
 
-  const totalCredits = data.reduce((sum, item) => sum + item.credits_used, 0);
-  const totalMessages = data.length;
-  const reportsGenerated = data.filter(item => item.report_name).length;
-  const avgCreditsPerMessage = totalCredits / totalMessages;
-
-  // Calculate billing period dates from data
-  const dates = data.map(item => new Date(item.timestamp)).sort((a, b) => a.getTime() - b.getTime());
-  const startDate = dates[0];
-  const endDate = dates[dates.length - 1];
-  const formatDate = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  const billingPeriod = `${formatDate(startDate)} – ${formatDate(endDate)}`;
+  const exportFilename = `orbital-usage-${formatDate(stats.startDate).replace(/\s/g, '-')}-to-${formatDate(stats.endDate).replace(/\s/g, '-')}.csv`;
 
   return (
     <div className="min-h-screen relative">
-      {/* Background decorations - scrolls with page */}
       <BackgroundGraphics />
 
       {/* Sticky Header */}
@@ -182,35 +106,16 @@ export function Dashboard() {
               </svg>
             </div>
             <div className="flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-surface-900">
-                Orbital Copilot
-              </h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-surface-900">Orbital Copilot</h1>
               <p className="text-surface-600 text-sm">
                 Usage Dashboard • <span className="text-surface-800 font-medium">{billingPeriod}</span>
               </p>
             </div>
             
-            {/* Actions */}
             <div className="flex items-center gap-3">
-              {/* Export Button */}
-              <button 
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium text-surface-700 bg-surface-50 border border-surface-300 rounded-lg hover:bg-white hover:border-accent-300 hover:text-accent-600 transition-all duration-200 shadow-sm"
-                onClick={() => {
-                  const filename = `orbital-usage-${formatDate(startDate).replace(/\s/g, '-')}-to-${formatDate(endDate).replace(/\s/g, '-')}.csv`;
-                  exportToCSV(data, filename);
-                }}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Export
-              </button>
-              
-              {/* User Avatar */}
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
-                  JD
-                </div>
+              <ExportButton data={data} filename={exportFilename} />
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+                JD
               </div>
             </div>
           </div>
@@ -222,19 +127,17 @@ export function Dashboard() {
         <div className="max-w-7xl mx-auto">
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <StatCard label="Total Credits Used" value={totalCredits.toFixed(2)} delay={100} highlight />
-            <StatCard label="Messages" value={totalMessages} delay={200} />
-            <StatCard label="Reports Generated" value={reportsGenerated} delay={300} />
-            <StatCard label="Avg Credits/Message" value={avgCreditsPerMessage.toFixed(2)} delay={400} />
+            <StatCard label="Total Credits Used" value={stats.totalCredits.toFixed(2)} delay={100} highlight />
+            <StatCard label="Messages" value={stats.totalMessages} delay={200} />
+            <StatCard label="Reports Generated" value={stats.reportsGenerated} delay={300} />
+            <StatCard label="Avg Credits/Message" value={stats.avgCreditsPerMessage.toFixed(2)} delay={400} />
           </div>
           
           {/* Chart Section */}
           <section className="glass-card-gradient p-6 mb-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-lg font-semibold text-surface-900">Daily Credits Consumption</h2>
-                <p className="text-sm text-surface-600">Credit usage breakdown by day</p>
-              </div>
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-surface-900">Daily Credits Consumption</h2>
+              <p className="text-sm text-surface-600">Credit usage breakdown by day</p>
             </div>
             <CreditsChart data={data} />
           </section>
