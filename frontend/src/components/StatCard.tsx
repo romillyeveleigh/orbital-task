@@ -3,6 +3,7 @@
  */
 
 import { ReactNode } from 'react';
+import { cn } from '../lib';
 
 interface StatCardProps {
   label: string;
@@ -34,7 +35,7 @@ export function StatCard({
       )}
       
       <p className="text-sm text-surface-600 font-medium mb-1 relative">{label}</p>
-      <p className={`text-2xl font-semibold font-mono relative ${highlight ? 'gradient-text-hero' : 'text-surface-900'}`}>
+      <p className={cn('text-2xl font-semibold font-mono relative', highlight ? 'gradient-text-hero' : 'text-surface-900')}>
         {value}
         {suffix && <span className="text-surface-500 text-lg ml-1">{suffix}</span>}
       </p>

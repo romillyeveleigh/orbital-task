@@ -7,7 +7,7 @@ import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender, ColumnDe
 import { UsageItem } from '../types';
 import { useSortState } from '../hooks';
 import { SortIcon } from './icons';
-import { formatTimestamp } from '../lib';
+import { formatTimestamp, cn } from '../lib';
 
 export function UsageTable({ data }: { data: UsageItem[] }) {
   const { sorting, setSorting } = useSortState();
@@ -85,9 +85,11 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
                 return (
                   <th
                     key={header.id}
-                    className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider transition-colors ${
-                      canSort ? 'cursor-pointer hover:bg-surface-100 select-none' : ''
-                    } ${isSorted ? 'text-accent-700' : 'text-surface-600'}`}
+                    className={cn(
+                      'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider transition-colors',
+                      canSort && 'cursor-pointer hover:bg-surface-100 select-none',
+                      isSorted ? 'text-accent-700' : 'text-surface-600'
+                    )}
                     onClick={toggleHandler}
                   >
                     <div className="flex items-center gap-2">
