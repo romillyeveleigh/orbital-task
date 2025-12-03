@@ -18,7 +18,8 @@ export async function fetchUsage(): Promise<UsageResponse> {
     return data;
   } catch (error) {
     // Avoid leaking internal details in production
-    if (import.meta.env.DEV) {
+    // Skip logging in test environment to avoid cluttering test output
+    if (import.meta.env.DEV && !import.meta.env.VITEST) {
       console.error("Error fetching usage data:", error);
     }
     throw error;
