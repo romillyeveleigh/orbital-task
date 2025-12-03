@@ -1,4 +1,4 @@
-# Orbital Copilot Usage Dashboard
+# Orbital Copilot Usage Dashboard - Romilly Eveleigh
 
 A full-stack application for tracking and displaying credit usage data for Orbital Copilot, an AI assistant for Real Estate lawyers.
 
@@ -67,13 +67,26 @@ The frontend will be available at `http://localhost:3000`
 
 ### Running Tests
 
-To run the test suite:
+#### Frontend Tests
+
+To run the frontend test suite:
 
 ```bash
 cd frontend
 pnpm test          # Run tests in watch mode
 pnpm test:run      # Run tests once
 pnpm test:coverage # Run tests with coverage report
+```
+
+#### Backend Tests
+
+To run the backend test suite:
+
+```bash
+cd backend
+pytest tests/ -v           # Run all tests with verbose output
+pytest tests/ -v --cov     # Run tests with coverage report
+pytest tests/ -k test_name # Run specific test
 ```
 
 ## How to Run
@@ -269,19 +282,28 @@ To explain why one message costs 12 credits while another costs 2:
 
 ## Testing
 
-The project includes test coverage for:
+The project includes comprehensive test coverage:
+
+### Backend Tests
 - ✅ Credit calculation logic (unit tests)
+- ✅ Pydantic models validation
+- ✅ API client functions (with HTTP mocking)
+- ✅ FastAPI endpoints (integration tests)
+- ✅ Error handling and edge cases
+
+### Frontend Tests
 - ✅ API service (integration tests)
 - ✅ Table sorting functionality
 - ✅ URL state management
 - ✅ CSV export functionality
 - ✅ Component rendering
 
-Run tests with `pnpm test` in the frontend directory.
+Run backend tests with `pytest tests/ -v` in the backend directory.  
+Run frontend tests with `pnpm test` in the frontend directory.
 
 ## Concessions Due to Time Constraints
 
-- Test coverage focused on critical paths (could be expanded)
+- Test coverage focused on critical paths (could be expanded with more edge cases)
 - No error boundaries in React (would add in production)
 - Basic error handling (could be more comprehensive)
 - No authentication/authorization (assumed not needed for this task)
@@ -298,7 +320,12 @@ orbital-task/
 │   ├── credit_calculator.py  # Credit calculation logic
 │   ├── models.py             # Pydantic models for validation
 │   ├── requirements.txt      # Python dependencies
-│   └── tests/                # Test files (to be added)
+│   └── tests/                # Backend test suite
+│       ├── test_credit_calculator.py
+│       ├── test_models.py
+│       ├── test_api_client.py
+│       ├── test_main.py
+│       └── conftest.py
 ├── frontend/
 │   ├── src/
 │   │   ├── App.tsx                # Application root with routing

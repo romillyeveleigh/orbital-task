@@ -177,7 +177,7 @@ export function Dashboard() {
 
           {/* Footer */}
           <footer className="mt-8 text-center text-sm text-surface-600 opacity-0 animate-fade-in" style={{ animationDelay: '600ms' }}>
-            <p>Orbital Copilot © {new Date().getFullYear()} • AI-powered due diligence for real estate law</p>
+            <p>Orbital Copilot © {new Date().getFullYear()} • AI-powered due diligence for for lawyers and property professionals • Developed by Romilly Eveleigh</p>
           </footer>
         </div>
       </main>
