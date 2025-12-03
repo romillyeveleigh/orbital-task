@@ -9,10 +9,7 @@ import { useSortState } from "./useSortState";
 
 function createWrapper(initialEntries: string[] = ["/"]) {
   return ({ children }: { children: React.ReactNode }) => (
-    <MemoryRouter
-      initialEntries={initialEntries}
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
+    <MemoryRouter initialEntries={initialEntries}>
       {children}
     </MemoryRouter>
   );

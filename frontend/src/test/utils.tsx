@@ -28,11 +28,7 @@ function AllProviders({ children }: WrapperProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        {children}
-      </BrowserRouter>
+      <BrowserRouter>{children}</BrowserRouter>
     </QueryClientProvider>
   );
 }
@@ -40,7 +36,7 @@ function AllProviders({ children }: WrapperProps) {
 // Custom render that includes all providers
 function customRender(
   ui: ReactElement,
-  options?: Omit<RenderOptions, "wrapper">,
+  options?: Omit<RenderOptions, "wrapper">
 ) {
   return render(ui, { wrapper: AllProviders, ...options });
 }
