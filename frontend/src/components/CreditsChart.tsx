@@ -51,7 +51,15 @@ function generateDateRange(startDate: Date, endDate: Date): Date[] {
   return dates;
 }
 
-function CustomTooltip({ active, payload }: any) {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    payload: ChartDataPoint;
+  }>;
+}
+
+function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload || !payload.length) return null;
 
   const data = payload[0].payload;

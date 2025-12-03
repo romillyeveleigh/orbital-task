@@ -8,6 +8,12 @@ Uses a simplified token estimation model:
 - Minimum cost: 1.00 credits always applies
 """
 
+import os
+
+# Base model rate: credits per 100 tokens
+# Can be overridden via environment variable for different models
+BASE_MODEL_RATE = 40
+
 
 def calculate_credits_from_text(text: str) -> float:
     """
@@ -26,8 +32,8 @@ def calculate_credits_from_text(text: str) -> float:
     estimated_tokens = len(text) / 4
     
     # Calculate credits: (tokens / 100) * base_rate
-    # base_model_rate = 40 credits per 100 tokens
-    base_model_rate = 40
+    # Use configurable base_model_rate (default: 40 credits per 100 tokens)
+    base_model_rate = float(os.getenv("BASE_MODEL_RATE", str(BASE_MODEL_RATE)))
     credits = (estimated_tokens / 100) * base_model_rate
     
     # Apply minimum cost of 1.00

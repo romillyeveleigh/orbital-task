@@ -3,6 +3,7 @@
  */
 
 import { useMemo } from 'react';
+import { formatInTimeZone } from 'date-fns-tz';
 import { CreditsChart, UsageTable, StatCard, BackgroundGraphics, ExportButton } from './';
 import { WarningIcon, InboxIcon, OrbitalIcon, CreditsIcon, MessageIcon, ReportIcon, TrendIcon } from './icons';
 import { useUsageData } from '../hooks';
@@ -24,7 +25,8 @@ export function Dashboard() {
     const dates = data.map(item => new Date(item.timestamp)).sort((a, b) => a.getTime() - b.getTime());
     const startDate = dates[0];
     const endDate = dates[dates.length - 1];
-    const formatDateFn = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    // Format dates in UTC for consistency with table timestamps and billing standards
+    const formatDateFn = (d: Date) => formatInTimeZone(d, 'UTC', 'dd MMM yyyy');
 
     return {
       stats: { totalCredits, totalMessages, reportsGenerated, avgCreditsPerMessage, startDate, endDate },

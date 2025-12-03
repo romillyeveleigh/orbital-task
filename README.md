@@ -14,6 +14,7 @@ This project consists of:
 - ✅ Sortable table with multi-column sorting (Report Name, Credits Used)
 - ✅ Shareable URLs with sort state preserved
 - ✅ Daily credit consumption bar chart
+- ✅ CSV export functionality for data analysis
 - ✅ Automatic data caching and error handling
 
 ## Setup Instructions
@@ -64,6 +65,17 @@ pnpm dev
 
 The frontend will be available at `http://localhost:3000`
 
+### Running Tests
+
+To run the test suite:
+
+```bash
+cd frontend
+pnpm test          # Run tests in watch mode
+pnpm test:run      # Run tests once
+pnpm test:coverage # Run tests with coverage report
+```
+
 ## How to Run
 
 1. Start the backend server (in one terminal):
@@ -79,6 +91,18 @@ pnpm dev
 ```
 
 3. Open your browser to `http://localhost:3000`
+
+## Features
+
+### CSV Export
+
+The dashboard includes a CSV export feature that allows users to download usage data for offline analysis. The exported CSV file includes:
+- Message ID
+- Timestamp (formatted as DD-MM-YYYY HH:mm in UTC, matching the table display)
+- Report Name (empty if no report)
+- Credits Used (formatted to 2 decimal places)
+
+Click the "Export" button in the header to download the data. The filename includes the billing period date range.
 
 ## API Documentation
 
@@ -100,7 +124,8 @@ FastAPI automatically generates interactive API documentation. Once the backend 
 - **TanStack Query**: Data fetching with automatic caching, error handling, loading states, and refetching - better than manual useState/useEffect
 - **TanStack Table**: Robust table component with built-in multi-column sorting, handles empty cells, better than custom implementation
 - **Tailwind CSS**: Fast styling, easy wireframe matching, quick polish without writing custom CSS
-- **Vite**: Faster dev experience, modern tooling, better HMR than Create React App
+- **Vite 7**: Latest version for faster dev experience, modern tooling, better HMR than Create React App
+- **Vitest 4**: Testing framework with excellent Vite integration and fast test execution
 - **Recharts**: React-friendly, good defaults, easy customization for bar charts
 - **URL state management with react-router-dom**: Enables shareable links with sort state preserved
 - **TypeScript**: Type safety for frontend code, helps with contract adherence
@@ -242,9 +267,21 @@ To explain why one message costs 12 credits while another costs 2:
 - ✅ Empty messages array → return empty usage array
 - ✅ Same `report_id` multiple times → cached to avoid duplicate fetches
 
+## Testing
+
+The project includes test coverage for:
+- ✅ Credit calculation logic (unit tests)
+- ✅ API service (integration tests)
+- ✅ Table sorting functionality
+- ✅ URL state management
+- ✅ CSV export functionality
+- ✅ Component rendering
+
+Run tests with `pnpm test` in the frontend directory.
+
 ## Concessions Due to Time Constraints
 
-- Limited test coverage (focused on credit calculation logic)
+- Test coverage focused on critical paths (could be expanded)
 - No error boundaries in React (would add in production)
 - Basic error handling (could be more comprehensive)
 - No authentication/authorization (assumed not needed for this task)
@@ -264,21 +301,33 @@ orbital-task/
 │   └── tests/                # Test files (to be added)
 ├── frontend/
 │   ├── src/
-│   │   ├── App.tsx           # Main dashboard component
-│   │   ├── main.tsx          # Application entry point
-│   │   ├── types.ts          # TypeScript type definitions
+│   │   ├── App.tsx                # Application root with routing
+│   │   ├── main.tsx               # Application entry point
+│   │   ├── types.ts               # TypeScript type definitions
 │   │   ├── services/
-│   │   │   └── api.ts        # API service for backend calls
+│   │   │   └── api.ts             # API service for backend calls
 │   │   ├── hooks/
 │   │   │   ├── useUsageData.ts    # TanStack Query hook
 │   │   │   └── useSortState.ts    # URL state management
-│   │   └── components/
-│   │       ├── UsageTable.tsx      # Sortable table component
-│   │       └── CreditsChart.tsx   # Bar chart component
+│   │   ├── components/
+│   │   │   ├── Dashboard.tsx       # Main dashboard component
+│   │   │   ├── UsageTable.tsx     # Sortable table component
+│   │   │   ├── CreditsChart.tsx   # Bar chart component
+│   │   │   ├── StatCard.tsx       # Statistics card component
+│   │   │   ├── ExportButton.tsx   # CSV export functionality
+│   │   │   ├── BackgroundGraphics.tsx  # Decorative background
+│   │   │   └── icons/             # SVG icon components
+│   │   ├── lib/
+│   │   │   ├── csv.ts             # CSV export utilities
+│   │   │   └── utils.ts           # Utility functions
+│   │   └── test/
+│   │       ├── setup.ts           # Test configuration
+│   │       └── utils.tsx          # Test utilities
 │   ├── package.json
-│   ├── vite.config.ts
+│   ├── vite.config.ts             # Vite + Vitest configuration
 │   ├── tailwind.config.js
-│   └── postcss.config.js
+│   ├── postcss.config.js
+│   └── tsconfig.json
 ├── README.md
 └── .gitignore
 ```

@@ -11,11 +11,21 @@ import { SortIcon } from './icons';
 
 const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
 
+/**
+ * Formats ISO 8601 timestamp to "DD-MM-YYYY HH:mm" format in UTC.
+ * Using UTC ensures consistent billing data display across all users regardless of timezone,
+ * which is standard practice for usage/billing dashboards.
+ */
 function formatTimestamp(isoTimestamp: string): string {
   try {
-    return formatInTimeZone(new Date(isoTimestamp), 'UTC', 'dd-MM-yyyy HH:mm');
+    const date = new Date(isoTimestamp);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    return formatInTimeZone(date, 'UTC', 'dd-MM-yyyy HH:mm');
   } catch {
-    return isoTimestamp;
+    return 'Invalid date';
   }
 }
 

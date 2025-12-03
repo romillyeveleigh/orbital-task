@@ -72,14 +72,11 @@ async def get_usage(request: Request):
             
             # Collect unique report IDs
             report_ids = []
-            message_report_map = {}  # Map message index to report_id
             
-            for idx, message in enumerate(messages):
+            for message in messages:
                 report_id = message.get("report_id")
-                if report_id:
-                    if report_id not in report_ids:
-                        report_ids.append(report_id)
-                    message_report_map[idx] = report_id
+                if report_id and report_id not in report_ids:
+                    report_ids.append(report_id)
             
             # Fetch all reports concurrently with caching
             report_cache = {}
@@ -90,10 +87,20 @@ async def get_usage(request: Request):
             usage_items: List[UsageItem] = []
             
             for idx, message in enumerate(messages):
-                message_id = message["id"]
-                timestamp = message["timestamp"]
+                # Validate message structure
+                if not isinstance(message, dict):
+                    logger.warning(f"Invalid message at index {idx}: not a dictionary")
+                    continue
+                
+                message_id = message.get("id")
+                timestamp = message.get("timestamp")
                 text = message.get("text", "")
                 report_id = message.get("report_id")
+                
+                # Validate required fields
+                if message_id is None or timestamp is None:
+                    logger.warning(f"Invalid message at index {idx}: missing required fields (id or timestamp)")
+                    continue
                 
                 # Determine credits and report name
                 credits_used: float
