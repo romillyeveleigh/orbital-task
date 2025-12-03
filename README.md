@@ -5,6 +5,7 @@ A full-stack application for tracking and displaying credit usage data for Orbit
 ## Overview
 
 This project consists of:
+
 - **Backend**: Python FastAPI API that aggregates data from external APIs and calculates credit usage
 - **Frontend**: React dashboard with sortable table and bar chart visualization
 
@@ -21,44 +22,51 @@ This project consists of:
 
 ### Prerequisites
 
-- Python 3.9+ 
+- Python 3.9+
 - Node.js 18+ and pnpm
 - pip (Python package manager)
 
 ### Backend Setup
 
 1. Navigate to the backend directory:
+
 ```bash
 cd backend
 ```
 
 2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 3. Run the development server:
+
 ```bash
 uvicorn main:app --reload
 ```
 
 The API will be available at `http://localhost:8000`
+
 - API endpoint: `http://localhost:8000/usage`
 - API documentation: `http://localhost:8000/docs` (FastAPI auto-generated)
 
 ### Frontend Setup
 
 1. Navigate to the frontend directory:
+
 ```bash
 cd frontend
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Run the development server:
+
 ```bash
 pnpm dev
 ```
@@ -92,12 +100,14 @@ pytest tests/ -k test_name # Run specific test
 ## How to Run
 
 1. Start the backend server (in one terminal):
+
 ```bash
 cd backend
 uvicorn main:app --reload
 ```
 
 2. Start the frontend server (in another terminal):
+
 ```bash
 cd frontend
 pnpm dev
@@ -110,6 +120,7 @@ pnpm dev
 ### CSV Export
 
 The dashboard includes a CSV export feature that allows users to download usage data for offline analysis. The exported CSV file includes:
+
 - Message ID
 - Timestamp (formatted as DD-MM-YYYY HH:mm in UTC, matching the table display)
 - Report Name (empty if no report)
@@ -120,6 +131,7 @@ Click the "Export" button in the header to download the data. The filename inclu
 ## API Documentation
 
 FastAPI automatically generates interactive API documentation. Once the backend is running, visit:
+
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
@@ -159,6 +171,7 @@ The system calculates credits for messages in two ways:
 ### Why do we approximate 1 token ≈ 4 characters?
 
 This approximation works reasonably well for English text, where most tokens are words or subwords. However, it breaks down in several scenarios:
+
 - **Legal jargon**: Complex legal terms may be tokenized differently
 - **Special characters**: Punctuation, symbols, and formatting can affect tokenization
 - **Non-English text**: Different languages have different tokenization patterns
@@ -167,11 +180,13 @@ This approximation works reasonably well for English text, where most tokens are
 ### Implications of different models (e.g., GPT-3.5 vs GPT-4)
 
 Different models have different:
+
 - **Token costs**: GPT-4 costs significantly more per token than GPT-3.5
 - **Tokenization algorithms**: Each model may tokenize the same text differently
 - **Context windows**: Affects how much text can be processed in one request
 
 This would require:
+
 - Model-specific `base_model_rate` values
 - Potentially different token estimation heuristics
 - UI to show which model was used for each request
@@ -179,11 +194,13 @@ This would require:
 ### How would you improve token estimation in a production system?
 
 1. **Use exact token counting libraries**:
+
    - `tiktoken` (OpenAI's tokenizer) for GPT models
    - Model-specific tokenizers for other providers
    - This gives exact token counts, not estimates
 
 2. **Cache token counts**:
+
    - Store token counts alongside messages
    - Avoid recalculating for identical text
 
@@ -194,14 +211,17 @@ This would require:
 ### Caching/batching strategies for slow or rate-limited LLM APIs
 
 1. **Redis caching**:
+
    - Cache report metadata (name, cost) with TTL
    - Reduces external API calls significantly
 
 2. **Batch API calls**:
+
    - Already implemented with `asyncio.gather()` for concurrent fetching
    - Could add request queuing for rate-limited APIs
 
 3. **Database storage**:
+
    - Store historical report data locally
    - Only fetch from external API when needed
 
@@ -212,11 +232,13 @@ This would require:
 ### Normalizing token billing for legal prompts
 
 Legal prompts vary greatly in:
+
 - Length (short questions vs. comprehensive reports)
 - Complexity (simple lookups vs. complex analysis)
 - Context required (single document vs. multiple documents)
 
 Potential normalization strategies:
+
 1. **Tiered pricing**: Different rates for questions vs. reports
 2. **Complexity scoring**: Factor in document length, number of clauses analyzed
 3. **User intent classification**: Charge differently for "lookup" vs. "analysis" requests
@@ -227,12 +249,14 @@ Potential normalization strategies:
 To explain why one message costs 12 credits while another costs 2:
 
 1. **Show breakdown in UI**:
+
    - Token count used
    - Model used (if multiple models)
    - Base rate applied
    - Calculation formula
 
 2. **Transparency features**:
+
    - Tooltips showing token count and calculation
    - "Why this cost?" button with explanation
    - Comparison view showing similar messages
@@ -253,11 +277,11 @@ To explain why one message costs 12 credits while another costs 2:
 
 ### Speed of Iteration
 
-- **Linting/formatting tools**: 
+- **Linting/formatting tools**:
   - ESLint + Prettier for frontend
   - Black + Ruff for backend
   - Pre-commit hooks for automatic formatting
-- **Hot reload configuration**: 
+- **Hot reload configuration**:
   - Vite HMR for instant frontend updates
   - FastAPI auto-reload for backend changes
 - **Component structure**: Modular design allows easy extension and modification
@@ -274,7 +298,7 @@ To explain why one message costs 12 credits while another costs 2:
 ## Edge Cases Handled
 
 - ✅ Empty message text → minimum 1.00 credits
-- ✅ Short message text → minimum 1.00 credits  
+- ✅ Short message text → minimum 1.00 credits
 - ✅ Invalid `report_id` (404) → fallback to text-based calculation
 - ✅ Missing `report_name` → field omitted from response (not null)
 - ✅ Empty messages array → return empty usage array
@@ -285,6 +309,7 @@ To explain why one message costs 12 credits while another costs 2:
 The project includes comprehensive test coverage:
 
 ### Backend Tests
+
 - ✅ Credit calculation logic (unit tests)
 - ✅ Pydantic models validation
 - ✅ API client functions (with HTTP mocking)
@@ -292,6 +317,7 @@ The project includes comprehensive test coverage:
 - ✅ Error handling and edge cases
 
 ### Frontend Tests
+
 - ✅ API service (integration tests)
 - ✅ Table sorting functionality
 - ✅ URL state management
@@ -362,4 +388,3 @@ orbital-task/
 ## License
 
 This project was created as part of a technical assessment.
-

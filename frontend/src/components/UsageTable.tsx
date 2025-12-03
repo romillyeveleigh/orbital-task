@@ -66,7 +66,7 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
         ),
       },
     ],
-    [],
+    []
   );
 
   const table = useReactTable({
@@ -97,6 +97,7 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
                 const sortIndex = header.column.getSortIndex();
                 const sortDirection = isSorted || "none";
                 const toggleHandler = header.column.getToggleSortingHandler();
+                const isIdColumn = header.column.id === "id";
 
                 return (
                   <th
@@ -106,13 +107,14 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
                       canSort &&
                         "cursor-pointer hover:bg-surface-100 select-none",
                       isSorted ? "text-accent-700" : "text-surface-600",
+                      isIdColumn && "hidden md:table-cell"
                     )}
                     onClick={toggleHandler}
                   >
                     <div className="flex items-center gap-2">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext(),
+                        header.getContext()
                       )}
                       {canSort && (
                         <div className="flex items-center gap-1">
@@ -138,11 +140,20 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
               className="table-row-animate"
               style={{ animationDelay: `${i * 20}ms` }}
             >
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-4 py-4 text-sm">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
+              {row.getVisibleCells().map((cell) => {
+                const isIdColumn = cell.column.id === "id";
+                return (
+                  <td
+                    key={cell.id}
+                    className={cn(
+                      "px-4 py-4 text-sm",
+                      isIdColumn && "hidden md:table-cell"
+                    )}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

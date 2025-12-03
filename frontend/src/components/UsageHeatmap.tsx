@@ -18,6 +18,24 @@ interface UsageHeatmapProps {
   data: UsageItem[];
 }
 
+// Helper functions
+const getDateKey = (date: Date): string =>
+  formatInTimeZone(date, "UTC", "yyyy-MM-dd");
+
+const getMonthKey = (date: Date): string =>
+  formatInTimeZone(date, "UTC", "yyyy-MM");
+
+const getIntensityColor = (intensity: number): string => {
+  const colors = [
+    "bg-surface-200",
+    "bg-accent-200",
+    "bg-accent-400",
+    "bg-accent-600",
+    "bg-accent-700",
+  ];
+  return colors[intensity] || colors[0];
+};
+
 export function UsageHeatmap({ data }: UsageHeatmapProps) {
   const [hoveredDay, setHoveredDay] = useState<{
     weekIndex: number;
@@ -30,8 +48,7 @@ export function UsageHeatmap({ data }: UsageHeatmapProps) {
 
     data.forEach((item) => {
       const date = new Date(item.timestamp);
-      // Use UTC date string as key (YYYY-MM-DD)
-      const dateKey = formatInTimeZone(date, "UTC", "yyyy-MM-dd");
+      const dateKey = getDateKey(date);
       const existing = grouped.get(dateKey);
 
       if (existing) {
@@ -61,53 +78,34 @@ export function UsageHeatmap({ data }: UsageHeatmapProps) {
   const gridDays = useMemo(() => {
     if (dayData.length === 0) return [];
 
-    // Find all unique months with activity (YYYY-MM format)
-    const activeMonths = new Set<string>();
-    dayData.forEach((d) => {
-      const monthKey = formatInTimeZone(d.date, "UTC", "yyyy-MM");
-      activeMonths.add(monthKey);
-    });
+    // Find all unique months with activity
+    const activeMonths = new Set(dayData.map((d) => getMonthKey(d.date)));
 
     // Create a map of date keys to day data
-    const dataMap = new Map(
-      dayData.map((d) => {
-        const key = formatInTimeZone(d.date, "UTC", "yyyy-MM-dd");
-        return [key, d];
-      })
-    );
+    const dataMap = new Map(dayData.map((d) => [getDateKey(d.date), d]));
 
     // Generate all days for each active month
     const allDays: Array<{ date: Date; data?: DayData }> = [];
 
-    // Sort months chronologically
-    const sortedMonths = Array.from(activeMonths).sort();
+    Array.from(activeMonths)
+      .sort()
+      .forEach((monthKey) => {
+        const [year, month] = monthKey.split("-").map(Number);
+        const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
 
-    sortedMonths.forEach((monthKey) => {
-      const [year, month] = monthKey.split("-").map(Number);
-
-      // Get first and last day of the month
-      const firstDay = new Date(Date.UTC(year, month - 1, 1));
-      const lastDay = new Date(Date.UTC(year, month, 0)); // Last day of month
-
-      // Generate all days in this month
-      for (let day = 1; day <= lastDay.getUTCDate(); day++) {
-        const date = new Date(Date.UTC(year, month - 1, day));
-        date.setUTCHours(0, 0, 0, 0);
-
-        const dateKey = formatInTimeZone(date, "UTC", "yyyy-MM-dd");
-        const data = dataMap.get(dateKey);
-
-        allDays.push({ date, data });
-      }
-    });
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(Date.UTC(year, month - 1, day));
+          date.setUTCHours(0, 0, 0, 0);
+          allDays.push({ date, data: dataMap.get(getDateKey(date)) });
+        }
+      });
 
     return allDays;
   }, [dayData]);
 
   // Get color intensity based on credits (0-4 levels)
   const getIntensity = (credits: number): number => {
-    if (credits === 0) return 0;
-    if (maxCredits === 0) return 0;
+    if (credits === 0 || maxCredits === 0) return 0;
     const ratio = credits / maxCredits;
     if (ratio < 0.25) return 1;
     if (ratio < 0.5) return 2;
@@ -116,14 +114,8 @@ export function UsageHeatmap({ data }: UsageHeatmapProps) {
   };
 
   // Format date for display
-  const formatDate = (date: Date): string => {
-    return formatInTimeZone(date, "UTC", "MMM dd, yyyy");
-  };
-
-  // Get day of week (0 = Sunday, 6 = Saturday)
-  const getDayOfWeek = (date: Date): number => {
-    return date.getUTCDay();
-  };
+  const formatDate = (date: Date): string =>
+    formatInTimeZone(date, "UTC", "MMM dd, yyyy");
 
   // Organize days into weeks (Sunday to Saturday)
   // Pad weeks to start on Sunday and end on Saturday
@@ -134,11 +126,10 @@ export function UsageHeatmap({ data }: UsageHeatmapProps) {
     let currentWeek: Array<{ date: Date; data?: DayData }> = [];
 
     // Pad first week if it doesn't start on Sunday
-    const firstDay = gridDays[0];
-    const firstDayOfWeek = getDayOfWeek(firstDay.date);
+    const firstDayOfWeek = gridDays[0].date.getUTCDay();
     if (firstDayOfWeek > 0) {
       for (let i = 0; i < firstDayOfWeek; i++) {
-        const date = new Date(firstDay.date);
+        const date = new Date(gridDays[0].date);
         date.setUTCDate(date.getUTCDate() - (firstDayOfWeek - i));
         date.setUTCHours(0, 0, 0, 0);
         currentWeek.push({ date });
@@ -146,7 +137,7 @@ export function UsageHeatmap({ data }: UsageHeatmapProps) {
     }
 
     gridDays.forEach((day) => {
-      const dayOfWeek = getDayOfWeek(day.date);
+      const dayOfWeek = day.date.getUTCDay();
 
       // Start new week on Sunday
       if (dayOfWeek === 0 && currentWeek.length > 0) {
@@ -159,11 +150,10 @@ export function UsageHeatmap({ data }: UsageHeatmapProps) {
 
     // Pad last week if it doesn't end on Saturday
     if (currentWeek.length > 0) {
-      const lastDay = gridDays[gridDays.length - 1];
-      const lastDayOfWeek = getDayOfWeek(lastDay.date);
+      const lastDayOfWeek = gridDays[gridDays.length - 1].date.getUTCDay();
       if (lastDayOfWeek < 6) {
         for (let i = lastDayOfWeek + 1; i <= 6; i++) {
-          const date = new Date(lastDay.date);
+          const date = new Date(gridDays[gridDays.length - 1].date);
           date.setUTCDate(date.getUTCDate() + (i - lastDayOfWeek));
           date.setUTCHours(0, 0, 0, 0);
           currentWeek.push({ date });
@@ -204,50 +194,22 @@ export function UsageHeatmap({ data }: UsageHeatmapProps) {
             {/* Weeks */}
             <div className="flex gap-1 py-1">
               {weeks.map((week, weekIndex) => {
-                // Find first day in week that's within our active months (not padding)
-                const firstRealDay = week.find((day) => {
-                  const dateKey = formatInTimeZone(
-                    day.date,
-                    "UTC",
-                    "yyyy-MM-dd"
-                  );
-                  return gridDays.some(
-                    (gd) =>
-                      formatInTimeZone(gd.date, "UTC", "yyyy-MM-dd") === dateKey
-                  );
-                });
+                // Find first day in week that has data (not padding)
+                const findRealDay = (weekDays: typeof week) =>
+                  weekDays.find((day) => day.data !== undefined);
 
-                // Get previous week's month for comparison
-                const prevWeek = weekIndex > 0 ? weeks[weekIndex - 1] : null;
-                const prevWeekFirstRealDay = prevWeek
-                  ? prevWeek.find((day) => {
-                      const dateKey = formatInTimeZone(
-                        day.date,
-                        "UTC",
-                        "yyyy-MM-dd"
-                      );
-                      return gridDays.some(
-                        (gd) =>
-                          formatInTimeZone(gd.date, "UTC", "yyyy-MM-dd") ===
-                          dateKey
-                      );
-                    })
-                  : null;
+                const firstRealDay = findRealDay(week);
+                const prevWeekFirstRealDay =
+                  weekIndex > 0 ? findRealDay(weeks[weekIndex - 1]) : null;
 
                 const currentMonth = firstRealDay
-                  ? formatInTimeZone(firstRealDay.date, "UTC", "yyyy-MM")
+                  ? getMonthKey(firstRealDay.date)
                   : null;
                 const prevMonth = prevWeekFirstRealDay
-                  ? formatInTimeZone(
-                      prevWeekFirstRealDay.date,
-                      "UTC",
-                      "yyyy-MM"
-                    )
+                  ? getMonthKey(prevWeekFirstRealDay.date)
                   : null;
 
-                // Show month label if:
-                // 1. First week, or
-                // 2. Month changed from previous week
+                // Show month label if first week or month changed
                 const shouldShowMonth =
                   firstRealDay &&
                   (weekIndex === 0 || currentMonth !== prevMonth);
@@ -302,11 +264,7 @@ export function UsageHeatmap({ data }: UsageHeatmapProps) {
                               hasData &&
                                 "hover:ring-2 hover:ring-accent-400 hover:ring-offset-1 cursor-pointer",
                               !hasData && "opacity-50",
-                              intensity === 0 && "bg-surface-200",
-                              intensity === 1 && "bg-accent-200",
-                              intensity === 2 && "bg-accent-400",
-                              intensity === 3 && "bg-accent-600",
-                              intensity === 4 && "bg-accent-700"
+                              getIntensityColor(intensity)
                             )}
                             aria-label={
                               hasData
@@ -362,14 +320,7 @@ export function UsageHeatmap({ data }: UsageHeatmapProps) {
           {[0, 1, 2, 3, 4].map((level) => (
             <div
               key={level}
-              className={cn(
-                "w-3 h-3 rounded-sm",
-                level === 0 && "bg-surface-200",
-                level === 1 && "bg-accent-200",
-                level === 2 && "bg-accent-400",
-                level === 3 && "bg-accent-600",
-                level === 4 && "bg-accent-700"
-              )}
+              className={cn("w-3 h-3 rounded-sm", getIntensityColor(level))}
               aria-hidden="true"
             />
           ))}
