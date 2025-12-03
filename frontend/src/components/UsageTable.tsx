@@ -7,6 +7,7 @@ import { useReactTable, getCoreRowModel, flexRender, ColumnDef } from '@tanstack
 import { formatInTimeZone } from 'date-fns-tz';
 import { UsageItem } from '../types';
 import { useSortState } from '../hooks';
+import { SortIcon } from './icons';
 
 const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
 
@@ -85,20 +86,6 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
     manualSorting: true,
   });
 
-  const renderSortIcon = (direction: 'asc' | 'desc' | 'none') => {
-    if (direction === 'none') {
-      return (
-        <svg className="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
-    }
-    return (
-      <svg className={`w-4 h-4 text-accent-600 ${direction === 'desc' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-      </svg>
-    );
-  };
 
   return (
     <div className="overflow-x-auto rounded-xl">
@@ -120,7 +107,7 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
                   >
                     <div className="flex items-center gap-2">
                       {flexRender(header.column.columnDef.header, header.getContext())}
-                      {isSortable && renderSortIcon(direction)}
+                      {isSortable && <SortIcon direction={direction} />}
                     </div>
                   </th>
                 );
