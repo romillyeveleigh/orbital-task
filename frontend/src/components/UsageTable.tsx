@@ -4,29 +4,10 @@
 
 import { useMemo } from 'react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender, ColumnDef } from '@tanstack/react-table';
-import { formatInTimeZone } from 'date-fns-tz';
 import { UsageItem } from '../types';
 import { useSortState } from '../hooks';
 import { SortIcon } from './icons';
-
-/**
- * Formats ISO 8601 timestamp to "DD-MM-YYYY HH:mm" format in UTC.
- * Using UTC ensures consistent billing data display across all users regardless of timezone,
- * which is standard practice for usage/billing dashboards.
- * Possibly add a dropdown to switch between UTC and local time in the future.
- */
-function formatTimestamp(isoTimestamp: string): string {
-  try {
-    const date = new Date(isoTimestamp);
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      return 'Invalid date';
-    }
-    return formatInTimeZone(date, 'UTC', 'dd-MM-yyyy HH:mm');
-  } catch {
-    return 'Invalid date';
-  }
-}
+import { formatTimestamp } from '../lib';
 
 export function UsageTable({ data }: { data: UsageItem[] }) {
   const { sorting, setSorting } = useSortState();
