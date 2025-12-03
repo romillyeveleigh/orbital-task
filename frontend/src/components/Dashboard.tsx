@@ -10,6 +10,7 @@ import {
   StatCard,
   BackgroundGraphics,
   ExportButton,
+  UsageHeatmap,
 } from "./";
 import {
   WarningIcon,
@@ -244,7 +245,7 @@ export function Dashboard() {
 
           {/* Table Section */}
           <section
-            className="glass-card-gradient p-6 opacity-0 animate-fade-in-up"
+            className="glass-card-gradient p-6 mb-8 opacity-0 animate-fade-in-up"
             style={{ animationDelay: "400ms" }}
             aria-labelledby="table-heading"
           >
@@ -260,6 +261,31 @@ export function Dashboard() {
               </p>
             </div>
             <UsageTable data={data} />
+          </section>
+
+          {/* Heatmap Section */}
+          <section
+            className="glass-card-gradient p-6 opacity-0 animate-fade-in-up"
+            style={{ animationDelay: "500ms" }}
+            aria-labelledby="heatmap-heading"
+          >
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-1">
+                <h2
+                  id="heatmap-heading"
+                  className="text-lg font-semibold text-surface-900"
+                >
+                  Usage Heatmap
+                </h2>
+                <span className="px-2 py-1 text-xs font-medium bg-accent-100 text-accent-700 rounded-md">
+                  Beta
+                </span>
+              </div>
+              <p className="text-sm text-surface-600">
+                Daily credit usage visualization
+              </p>
+            </div>
+            <UsageHeatmap data={data} />
           </section>
 
           {/* Footer */}

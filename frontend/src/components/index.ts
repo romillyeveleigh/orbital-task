@@ -4,3 +4,4 @@ export { Dashboard } from "./Dashboard";
 export { ExportButton } from "./ExportButton";
 export { StatCard } from "./StatCard";
 export { UsageTable } from "./UsageTable";
+export { UsageHeatmap } from "./UsageHeatmap";
