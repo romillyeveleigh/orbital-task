@@ -2,9 +2,7 @@
 Tests for credit_calculator module.
 """
 
-import os
-import pytest
-from credit_calculator import calculate_credits_from_text, BASE_MODEL_RATE
+from credit_calculator import calculate_credits_from_text
 
 
 class TestCalculateCreditsFromText:

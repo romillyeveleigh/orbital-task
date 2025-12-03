@@ -13,10 +13,9 @@ export interface UsageResponse {
   usage: UsageItem[];
 }
 
-export type SortDirection = 'asc' | 'desc' | 'none';
+export type SortDirection = "asc" | "desc" | "none";
 
 export interface SortState {
   field: string;
   direction: SortDirection;
 }
-

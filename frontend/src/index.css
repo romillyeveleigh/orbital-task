@@ -4,14 +4,19 @@
 
 :root {
   --gradient-accent: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  --gradient-hero: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+  --gradient-hero: linear-gradient(
+    135deg,
+    #3b82f6 0%,
+    #6366f1 50%,
+    #8b5cf6 100%
+  );
   --gradient-border: linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6);
 }
 
 @layer base {
   body {
     @apply bg-surface-100 text-surface-900 antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
     min-height: 100vh;
   }
 
@@ -70,16 +75,18 @@
 
   .glass-card-gradient {
     @apply bg-surface-50 rounded-2xl shadow-card relative;
-    background: linear-gradient(white, white) padding-box,
-                linear-gradient(135deg, #e2e8f0, #e2e8f0) border-box;
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(135deg, #e2e8f0, #e2e8f0) border-box;
     border: 1px solid transparent;
     transition: all 0.3s ease;
   }
 
   .glass-card-gradient:hover {
     @apply shadow-card-hover;
-    background: linear-gradient(white, white) padding-box,
-                var(--gradient-border) border-box;
+    background:
+      linear-gradient(white, white) padding-box,
+      var(--gradient-border) border-box;
   }
 
   .gradient-text {

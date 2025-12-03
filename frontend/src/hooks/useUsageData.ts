@@ -3,13 +3,13 @@
  * Provides automatic caching, error handling, and loading states.
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { fetchUsage } from '../services';
-import { UsageResponse } from '../types';
+import { useQuery } from "@tanstack/react-query";
+import { fetchUsage } from "../services";
+import { UsageResponse } from "../types";
 
 export function useUsageData() {
   const { data, isLoading, error } = useQuery<UsageResponse>({
-    queryKey: ['usage'],
+    queryKey: ["usage"],
     queryFn: fetchUsage,
     staleTime: 30000, // Consider data fresh for 30 seconds
     retry: 2,
@@ -21,4 +21,3 @@ export function useUsageData() {
     error,
   };
 }
-

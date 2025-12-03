@@ -2,8 +2,8 @@
  * Stat card component for displaying key metrics.
  */
 
-import { ReactNode } from 'react';
-import { cn } from '../lib';
+import { ReactNode } from "react";
+import { cn } from "../lib";
 
 interface StatCardProps {
   label: string;
@@ -14,32 +14,43 @@ interface StatCardProps {
   icon?: ReactNode;
 }
 
-export function StatCard({ 
-  label, 
-  value, 
-  suffix = '',
+export function StatCard({
+  label,
+  value,
+  suffix = "",
   delay = 0,
   highlight = false,
-  icon
+  icon,
 }: StatCardProps) {
   return (
-    <div 
+    <div
       className="glass-card-gradient p-5 opacity-0 animate-fade-in-up relative overflow-hidden"
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Decorative background icon */}
       {icon && (
-        <div className="absolute -right-3 -bottom-3 w-20 h-20 text-accent-500/[0.07] rotate-12 pointer-events-none" aria-hidden="true">
+        <div
+          className="absolute -right-3 -bottom-3 w-20 h-20 text-accent-500/[0.07] rotate-12 pointer-events-none"
+          aria-hidden="true"
+        >
           {icon}
         </div>
       )}
-      
-      <p className="text-sm text-surface-600 font-medium mb-1 relative">{label}</p>
-      <p className={cn('text-2xl font-semibold font-mono relative', highlight ? 'gradient-text-hero' : 'text-surface-900')}>
+
+      <p className="text-sm text-surface-600 font-medium mb-1 relative">
+        {label}
+      </p>
+      <p
+        className={cn(
+          "text-2xl font-semibold font-mono relative",
+          highlight ? "gradient-text-hero" : "text-surface-900",
+        )}
+      >
         {value}
-        {suffix && <span className="text-surface-500 text-lg ml-1">{suffix}</span>}
+        {suffix && (
+          <span className="text-surface-500 text-lg ml-1">{suffix}</span>
+        )}
       </p>
     </div>
   );
 }
-

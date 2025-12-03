@@ -58,7 +58,7 @@ export function useSortState() {
       }
       setSearchParams(newParams, { replace: true });
     },
-    [sorting, searchParams, setSearchParams]
+    [sorting, searchParams, setSearchParams],
   );
 
   return {

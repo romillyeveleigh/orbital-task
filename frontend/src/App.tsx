@@ -3,12 +3,14 @@
  * Sets up routing and renders the dashboard.
  */
 
-import { BrowserRouter } from 'react-router-dom';
-import { Dashboard } from './components';
+import { BrowserRouter } from "react-router-dom";
+import { Dashboard } from "./components";
 
 function App() {
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
       <Dashboard />
     </BrowserRouter>
   );
