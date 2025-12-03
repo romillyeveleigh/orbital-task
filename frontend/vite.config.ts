@@ -1,10 +1,19 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    visualizer({
+      open: false,
+      filename: 'dist/stats.html',
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
   server: {
     port: 3000,
     proxy: {
