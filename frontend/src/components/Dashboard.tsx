@@ -130,25 +130,25 @@ export function Dashboard() {
               value={stats.totalCredits.toFixed(2)} 
               delay={100} 
               highlight
-              icon={<CreditsIcon />}
+              icon={<CreditsIcon className="w-full h-full" />}
             />
             <StatCard 
               label="Messages" 
               value={stats.totalMessages} 
               delay={200}
-              icon={<MessageIcon />}
+              icon={<MessageIcon className="w-full h-full" />}
             />
             <StatCard 
               label="Reports Generated" 
               value={stats.reportsGenerated} 
               delay={300}
-              icon={<ReportIcon />}
+              icon={<ReportIcon className="w-full h-full" />}
             />
             <StatCard 
               label="Avg Credits/Message" 
               value={stats.avgCreditsPerMessage.toFixed(2)} 
               delay={400}
-              icon={<TrendIcon />}
+              icon={<TrendIcon className="w-full h-full" />}
             />
           </div>
           
