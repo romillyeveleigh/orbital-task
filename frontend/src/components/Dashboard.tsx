@@ -125,48 +125,51 @@ export function Dashboard() {
       {/* Main Content */}
       <main id="main-content" className="relative z-10 py-8 px-4 sm:px-6 lg:px-8" tabIndex={-1}>
         <div className="max-w-7xl mx-auto">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <StatCard 
-              label="Total Credits Used" 
-              value={stats.totalCredits.toFixed(2)} 
-              delay={100} 
-              highlight
-              icon={<CreditsIcon className="w-full h-full" />}
-            />
-            <StatCard 
-              label="Messages" 
-              value={stats.totalMessages} 
-              delay={200}
-              icon={<MessageIcon className="w-full h-full" />}
-            />
-            <StatCard 
-              label="Reports Generated" 
-              value={stats.reportsGenerated} 
-              delay={300}
-              icon={<ReportIcon className="w-full h-full" />}
-            />
-            <StatCard 
-              label="Avg Credits/Message" 
-              value={stats.avgCreditsPerMessage.toFixed(2)} 
-              delay={400}
-              icon={<TrendIcon className="w-full h-full" />}
-            />
-          </div>
+          {/* Stats Section */}
+          <section className="mb-8" aria-labelledby="stats-heading">
+            <h2 id="stats-heading" className="sr-only">Usage Statistics</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard 
+                label="Total Credits Used" 
+                value={stats.totalCredits.toFixed(2)} 
+                delay={100} 
+                highlight
+                icon={<CreditsIcon className="w-full h-full" />}
+              />
+              <StatCard 
+                label="Messages" 
+                value={stats.totalMessages} 
+                delay={200}
+                icon={<MessageIcon className="w-full h-full" />}
+              />
+              <StatCard 
+                label="Reports Generated" 
+                value={stats.reportsGenerated} 
+                delay={300}
+                icon={<ReportIcon className="w-full h-full" />}
+              />
+              <StatCard 
+                label="Avg Credits/Message" 
+                value={stats.avgCreditsPerMessage.toFixed(2)} 
+                delay={400}
+                icon={<TrendIcon className="w-full h-full" />}
+              />
+            </div>
+          </section>
           
           {/* Chart Section */}
-          <section className="glass-card-gradient p-6 mb-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+          <section className="glass-card-gradient p-6 mb-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '300ms' }} aria-labelledby="chart-heading">
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-surface-900">Daily Credits Consumption</h2>
+              <h2 id="chart-heading" className="text-lg font-semibold text-surface-900">Daily Credits Consumption</h2>
               <p className="text-sm text-surface-600">Credit usage breakdown by day</p>
             </div>
             <CreditsChart data={data} />
           </section>
 
           {/* Table Section */}
-          <section className="glass-card-gradient p-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+          <section className="glass-card-gradient p-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '400ms' }} aria-labelledby="table-heading">
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-surface-900">Usage Details</h2>
+              <h2 id="table-heading" className="text-lg font-semibold text-surface-900">Usage Details</h2>
               <p className="text-sm text-surface-600">Click column headers to sort • Multi-column sorting supported</p>
             </div>
             <UsageTable data={data} />

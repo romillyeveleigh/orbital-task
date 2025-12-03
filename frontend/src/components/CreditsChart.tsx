@@ -75,25 +75,25 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
     <div className="bg-white border border-surface-200 rounded-lg shadow-lg p-3 animate-scale-in">
       <p className="text-surface-600 text-xs mb-2">{data.fullDate}</p>
       <div className="space-y-1">
-        {reportPayload && (
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
-              <span className="text-surface-600 text-xs">Report Generation</span>
-            </div>
-            <span className="text-surface-900 font-semibold font-mono text-sm">
-              {reportPayload.value.toFixed(2)}
-            </span>
-          </div>
-        )}
         {chatPayload && (
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
               <span className="text-surface-600 text-xs">Chat</span>
             </div>
             <span className="text-surface-900 font-semibold font-mono text-sm">
               {chatPayload.value.toFixed(2)}
+            </span>
+          </div>
+        )}
+        {reportPayload && (
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
+              <span className="text-surface-600 text-xs">Report Generation</span>
+            </div>
+            <span className="text-surface-900 font-semibold font-mono text-sm">
+              {reportPayload.value.toFixed(2)}
             </span>
           </div>
         )}
@@ -171,11 +171,11 @@ export function CreditsChart({ data }: CreditsChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }} aria-label="Daily credits consumption chart">
           <defs>
-            <linearGradient id="reportGradient" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="chatGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
               <stop offset="100%" stopColor="#2563eb" stopOpacity={0.8} />
             </linearGradient>
-            <linearGradient id="chatGradient" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="reportGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#93c5fd" stopOpacity={1} />
               <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.8} />
             </linearGradient>
@@ -211,19 +211,19 @@ export function CreditsChart({ data }: CreditsChartProps) {
             )}
           />
           <Bar 
-            dataKey="reportCredits" 
-            name="Report Generation"
+            dataKey="chatCredits" 
+            name="Chat"
             stackId="credits"
-            fill="url(#reportGradient)"
+            fill="url(#chatGradient)"
             radius={[0, 0, 0, 0]}
             animationDuration={800}
             animationEasing="ease-out"
           />
           <Bar 
-            dataKey="chatCredits" 
-            name="Chat"
+            dataKey="reportCredits" 
+            name="Report Generation"
             stackId="credits"
-            fill="url(#chatGradient)"
+            fill="url(#reportGradient)"
             radius={[6, 6, 0, 0]}
             animationDuration={800}
             animationEasing="ease-out"

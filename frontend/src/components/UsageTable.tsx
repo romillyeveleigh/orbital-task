@@ -120,25 +120,28 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr>
+            <td colSpan={columns.length} className="px-4 py-3 border-t border-surface-200 bg-surface-50">
+              <p className="text-xs text-surface-600">
+                Showing <span className="text-surface-800 font-medium">{sortedRows.length}</span> entries
+                {activeSorts.length > 0 && (
+                  <span className="ml-2">
+                    • Sorted by{' '}
+                    {activeSorts.map((s, i) => (
+                      <span key={s.id}>
+                        {i > 0 && ', '}
+                        <span className="text-accent-700">{s.id.replace('_', ' ')}</span>
+                        <span className="text-surface-600"> ({s.desc ? 'desc' : 'asc'})</span>
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </p>
+            </td>
+          </tr>
+        </tfoot>
       </table>
-      
-      <div className="px-4 py-3 border-t border-surface-200 bg-surface-50">
-        <p className="text-xs text-surface-600">
-          Showing <span className="text-surface-800 font-medium">{sortedRows.length}</span> entries
-          {activeSorts.length > 0 && (
-            <span className="ml-2">
-              • Sorted by{' '}
-              {activeSorts.map((s, i) => (
-                <span key={s.id}>
-                  {i > 0 && ', '}
-                  <span className="text-accent-700">{s.id.replace('_', ' ')}</span>
-                  <span className="text-surface-600"> ({s.desc ? 'desc' : 'asc'})</span>
-                </span>
-              ))}
-            </span>
-          )}
-        </p>
-      </div>
     </div>
   );
 }
