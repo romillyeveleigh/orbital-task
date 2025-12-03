@@ -1,6 +1,6 @@
 /**
  * Table component for displaying usage data with sorting.
- * Features premium dark theme styling with smooth animations.
+ * Light theme styling for client-facing use.
  */
 
 import { useMemo } from 'react';
@@ -15,9 +15,6 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { UsageItem } from '../types';
 import { useSortState } from '../hooks/useSortState';
 
-/**
- * Format an ISO 8601 timestamp to a readable format in UTC.
- */
 function formatTimestampUTC(isoTimestamp: string): { date: string; time: string } {
   try {
     const d = new Date(isoTimestamp);
@@ -30,18 +27,16 @@ function formatTimestampUTC(isoTimestamp: string): { date: string; time: string 
   }
 }
 
-// Columns that support sorting
 const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
 
 interface UsageTableProps {
   data: UsageItem[];
 }
 
-// Sort indicator component
 function SortIndicator({ direction }: { direction: 'asc' | 'desc' | 'none' }) {
   if (direction === 'none') {
     return (
-      <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
       </svg>
     );
@@ -49,7 +44,7 @@ function SortIndicator({ direction }: { direction: 'asc' | 'desc' | 'none' }) {
   
   return (
     <svg 
-      className={`w-4 h-4 text-orbital-400 transition-transform duration-200 ${direction === 'desc' ? 'rotate-180' : ''}`} 
+      className={`w-4 h-4 text-accent-600 transition-transform duration-200 ${direction === 'desc' ? 'rotate-180' : ''}`} 
       fill="none" 
       viewBox="0 0 24 24" 
       stroke="currentColor"
@@ -62,7 +57,6 @@ function SortIndicator({ direction }: { direction: 'asc' | 'desc' | 'none' }) {
 export function UsageTable({ data }: UsageTableProps) {
   const { sortState, updateSort, getSortDirection } = useSortState();
 
-  // Convert sort state to TanStack Table format
   const sortingState: SortingState = useMemo(() => {
     return sortState
       .filter((s) => s.direction !== 'none')
@@ -72,14 +66,13 @@ export function UsageTable({ data }: UsageTableProps) {
       }));
   }, [sortState]);
 
-  // Define columns
   const columns = useMemo<ColumnDef<UsageItem>[]>(
     () => [
       {
         accessorKey: 'id',
         header: 'Message ID',
         cell: (info) => (
-          <span className="font-mono text-slate-400 text-sm">#{info.getValue() as number}</span>
+          <span className="font-mono text-surface-500 text-sm">#{info.getValue() as number}</span>
         ),
       },
       {
@@ -89,8 +82,8 @@ export function UsageTable({ data }: UsageTableProps) {
           const { date, time } = formatTimestampUTC(info.getValue() as string);
           return (
             <div className="flex flex-col">
-              <span className="text-slate-200">{date}</span>
-              <span className="text-slate-500 text-xs">{time} UTC</span>
+              <span className="text-surface-800">{date}</span>
+              <span className="text-surface-600 text-xs">{time} UTC</span>
             </div>
           );
         },
@@ -102,12 +95,12 @@ export function UsageTable({ data }: UsageTableProps) {
         cell: (info) => {
           const value = info.getValue() as string | undefined;
           if (!value) {
-            return <span className="text-slate-600 italic">—</span>;
+            return <span className="text-surface-400 italic" aria-label="No report">—</span>;
           }
           return (
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-orbital-500 flex-shrink-0"></span>
-              <span className="text-slate-200">{value}</span>
+              <span className="w-2 h-2 rounded-full bg-accent-500 flex-shrink-0"></span>
+              <span className="text-surface-800">{value}</span>
             </div>
           );
         },
@@ -119,7 +112,7 @@ export function UsageTable({ data }: UsageTableProps) {
         cell: (info) => {
           const value = info.getValue() as number;
           return (
-            <span className="font-mono text-orbital-300 font-medium">
+            <span className="font-mono text-accent-700 font-medium">
               {value.toFixed(2)}
             </span>
           );
@@ -129,11 +122,8 @@ export function UsageTable({ data }: UsageTableProps) {
     []
   );
 
-  // Apply sorting to data based on URL state
   const sortedData = useMemo(() => {
-    if (sortingState.length === 0) {
-      return data;
-    }
+    if (sortingState.length === 0) return data;
 
     return [...data].sort((a, b) => {
       for (const sort of sortingState) {
@@ -165,7 +155,6 @@ export function UsageTable({ data }: UsageTableProps) {
     manualSorting: true,
   });
 
-  // Handle column header click
   const handleSort = (columnId: string) => {
     const currentDirection = getSortDirection(columnId);
     updateSort(columnId, currentDirection);
@@ -176,7 +165,7 @@ export function UsageTable({ data }: UsageTableProps) {
       <table className="min-w-full">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="border-b border-surface-800">
+            <tr key={headerGroup.id} className="border-b border-surface-200">
               {headerGroup.headers.map((header) => {
                 const isSortable = SORTABLE_COLUMNS.includes(header.column.id);
                 const direction = getSortDirection(header.column.id);
@@ -186,25 +175,14 @@ export function UsageTable({ data }: UsageTableProps) {
                   <th
                     key={header.id}
                     className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider transition-colors duration-200 ${
-                      isSortable
-                        ? 'cursor-pointer hover:bg-surface-800/50 select-none'
-                        : ''
-                    } ${isActive ? 'text-orbital-400' : 'text-slate-500'}`}
+                      isSortable ? 'cursor-pointer hover:bg-surface-100 select-none' : ''
+                    } ${isActive ? 'text-accent-700' : 'text-surface-600'}`}
                     onClick={() => isSortable && handleSort(header.column.id)}
-                    aria-label={
-                      isSortable
-                        ? `Sort by ${header.column.id}`
-                        : undefined
-                    }
+                    aria-label={isSortable ? `Sort by ${header.column.id}` : undefined}
                   >
                     <div className="flex items-center gap-2">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {isSortable && (
-                        <SortIndicator direction={direction} />
-                      )}
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {isSortable && <SortIndicator direction={direction} />}
                     </div>
                   </th>
                 );
@@ -212,18 +190,11 @@ export function UsageTable({ data }: UsageTableProps) {
             </tr>
           ))}
         </thead>
-        <tbody className="divide-y divide-surface-800/50">
+        <tbody className="divide-y divide-surface-200">
           {table.getRowModel().rows.map((row, index) => (
-            <tr 
-              key={row.id} 
-              className="table-row-animate group"
-              style={{ animationDelay: `${index * 20}ms` }}
-            >
+            <tr key={row.id} className="table-row-animate" style={{ animationDelay: `${index * 20}ms` }}>
               {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  className="px-4 py-4 text-sm"
-                >
+                <td key={cell.id} className="px-4 py-4 text-sm">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
@@ -232,18 +203,17 @@ export function UsageTable({ data }: UsageTableProps) {
         </tbody>
       </table>
       
-      {/* Table footer with row count */}
-      <div className="px-4 py-3 border-t border-surface-800 bg-surface-900/30">
-        <p className="text-xs text-slate-500">
-          Showing <span className="text-slate-400 font-medium">{sortedData.length}</span> entries
+      <div className="px-4 py-3 border-t border-surface-200 bg-surface-50">
+        <p className="text-xs text-surface-600">
+          Showing <span className="text-surface-800 font-medium">{sortedData.length}</span> entries
           {sortingState.length > 0 && (
             <span className="ml-2">
               • Sorted by{' '}
               {sortingState.map((s, i) => (
                 <span key={s.id}>
                   {i > 0 && ', '}
-                  <span className="text-orbital-400">{s.id.replace('_', ' ')}</span>
-                  <span className="text-slate-600"> ({s.desc ? 'desc' : 'asc'})</span>
+                  <span className="text-accent-700">{s.id.replace('_', ' ')}</span>
+                  <span className="text-surface-600"> ({s.desc ? 'desc' : 'asc'})</span>
                 </span>
               ))}
             </span>
