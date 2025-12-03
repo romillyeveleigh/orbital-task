@@ -3,18 +3,17 @@
  */
 
 import { useMemo } from 'react';
-import { useReactTable, getCoreRowModel, flexRender, ColumnDef } from '@tanstack/react-table';
+import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender, ColumnDef } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
 import { UsageItem } from '../types';
 import { useSortState } from '../hooks';
 import { SortIcon } from './icons';
 
-const SORTABLE_COLUMNS = ['report_name', 'credits_used'];
-
 /**
  * Formats ISO 8601 timestamp to "DD-MM-YYYY HH:mm" format in UTC.
  * Using UTC ensures consistent billing data display across all users regardless of timezone,
  * which is standard practice for usage/billing dashboards.
+ * Possibly add a dropdown to switch between UTC and local time in the future.
  */
 function formatTimestamp(isoTimestamp: string): string {
   try {
@@ -30,29 +29,25 @@ function formatTimestamp(isoTimestamp: string): string {
 }
 
 export function UsageTable({ data }: { data: UsageItem[] }) {
-  const { sortState, toggleSort, getSortDirection } = useSortState();
-
-  const activeSorts = useMemo(() => 
-    sortState
-      .filter(s => s.direction !== 'none')
-      .map(s => ({ id: s.field, desc: s.direction === 'desc' })),
-    [sortState]
-  );
+  const { sorting, setSorting } = useSortState();
 
   const columns = useMemo<ColumnDef<UsageItem>[]>(() => [
     {
       accessorKey: 'id',
       header: 'Message ID',
+      enableSorting: false,
       cell: info => <span className="font-mono text-surface-500 text-sm">#{info.getValue() as number}</span>,
     },
     {
       accessorKey: 'timestamp',
       header: 'Timestamp',
+      enableSorting: false,
       cell: info => <span className="text-surface-800">{formatTimestamp(info.getValue() as string)}</span>,
     },
     {
       accessorKey: 'report_name',
       header: 'Report Name',
+      enableSorting: true,
       cell: info => {
         const value = info.getValue() as string | undefined;
         if (!value) return <span className="text-surface-400 italic">—</span>;
@@ -67,6 +62,7 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
     {
       accessorKey: 'credits_used',
       header: 'Credits Used',
+      enableSorting: true,
       cell: info => (
         <span className="font-mono text-accent-700 font-medium">
           {(info.getValue() as number).toFixed(2)}
@@ -75,27 +71,22 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
     },
   ], []);
 
-  const sortedData = useMemo(() => {
-    if (activeSorts.length === 0) return data;
-
-    return [...data].sort((a, b) => {
-      for (const sort of activeSorts) {
-        const aVal = sort.id === 'report_name' ? (a.report_name || '') : a.credits_used;
-        const bVal = sort.id === 'report_name' ? (b.report_name || '') : b.credits_used;
-        if (aVal < bVal) return sort.desc ? 1 : -1;
-        if (aVal > bVal) return sort.desc ? -1 : 1;
-      }
-      return 0;
-    });
-  }, [data, activeSorts]);
-
   const table = useReactTable({
-    data: sortedData,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    manualSorting: true,
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    isMultiSortEvent: () => true, // Always enable multi-sort
+    enableSortingRemoval: true,
   });
 
+
+  const sortedRows = table.getRowModel().rows;
+  const activeSorts = table.getState().sorting;
 
   return (
     <div className="overflow-x-auto rounded-xl">
@@ -104,20 +95,30 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id} className="border-b border-surface-200">
               {headerGroup.headers.map(header => {
-                const isSortable = SORTABLE_COLUMNS.includes(header.column.id);
-                const direction = getSortDirection(header.column.id);
+                const canSort = header.column.getCanSort();
+                const isSorted = header.column.getIsSorted();
+                const sortIndex = header.column.getSortIndex();
+                const sortDirection = isSorted === false ? 'none' : (isSorted === 'asc' ? 'asc' : 'desc');
+                const toggleHandler = header.column.getToggleSortingHandler();
                 
                 return (
                   <th
                     key={header.id}
                     className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider transition-colors ${
-                      isSortable ? 'cursor-pointer hover:bg-surface-100 select-none' : ''
-                    } ${direction !== 'none' ? 'text-accent-700' : 'text-surface-600'}`}
-                    onClick={() => isSortable && toggleSort(header.column.id)}
+                      canSort ? 'cursor-pointer hover:bg-surface-100 select-none' : ''
+                    } ${isSorted ? 'text-accent-700' : 'text-surface-600'}`}
+                    onClick={toggleHandler}
                   >
                     <div className="flex items-center gap-2">
                       {flexRender(header.column.columnDef.header, header.getContext())}
-                      {isSortable && <SortIcon direction={direction} />}
+                      {canSort && (
+                        <div className="flex items-center gap-1">
+                          {sortIndex >= 0 && activeSorts.length > 1 && (
+                            <span className="text-xs text-accent-600 font-medium">{sortIndex + 1}</span>
+                          )}
+                          <SortIcon direction={sortDirection} />
+                        </div>
+                      )}
                     </div>
                   </th>
                 );
@@ -126,7 +127,7 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
           ))}
         </thead>
         <tbody className="divide-y divide-surface-200">
-          {table.getRowModel().rows.map((row, i) => (
+          {sortedRows.map((row, i) => (
             <tr key={row.id} className="table-row-animate" style={{ animationDelay: `${i * 20}ms` }}>
               {row.getVisibleCells().map(cell => (
                 <td key={cell.id} className="px-4 py-4 text-sm">
@@ -140,7 +141,7 @@ export function UsageTable({ data }: { data: UsageItem[] }) {
       
       <div className="px-4 py-3 border-t border-surface-200 bg-surface-50">
         <p className="text-xs text-surface-600">
-          Showing <span className="text-surface-800 font-medium">{sortedData.length}</span> entries
+          Showing <span className="text-surface-800 font-medium">{sortedRows.length}</span> entries
           {activeSorts.length > 0 && (
             <span className="ml-2">
               • Sorted by{' '}

@@ -2,78 +2,91 @@
  * Tests for useSortState hook.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { useSortState } from './useSortState';
 
-function wrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+function createWrapper(initialEntries: string[] = ['/']) {
+  return ({ children }: { children: React.ReactNode }) => (
+    <MemoryRouter 
+      initialEntries={initialEntries}
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
       {children}
     </MemoryRouter>
   );
 }
 
 describe('useSortState', () => {
-  beforeEach(() => {
-    // Reset URL before each test
-    window.history.pushState({}, '', '/');
-  });
-
   it('returns empty sort state initially', () => {
-    const { result } = renderHook(() => useSortState(), { wrapper });
+    const { result } = renderHook(() => useSortState(), { wrapper: createWrapper() });
     
-    expect(result.current.sortState).toEqual([]);
+    expect(result.current.sorting).toEqual([]);
   });
 
-  it('getSortDirection returns "none" for unsorted field', () => {
-    const { result } = renderHook(() => useSortState(), { wrapper });
+  it('converts URL params to TanStack SortingState format', () => {
+    const { result } = renderHook(() => useSortState(), { 
+      wrapper: createWrapper(['/?sort=credits_used:asc'])
+    });
     
-    expect(result.current.getSortDirection('credits_used')).toBe('none');
+    expect(result.current.sorting).toEqual([{ id: 'credits_used', desc: false }]);
   });
 
-  it('toggleSort cycles through none -> asc -> desc -> none', () => {
-    const { result } = renderHook(() => useSortState(), { wrapper });
-    
-    // Initial state: none
-    expect(result.current.getSortDirection('credits_used')).toBe('none');
-    
-    // First click: asc
-    act(() => {
-      result.current.toggleSort('credits_used');
+  it('handles descending sort in URL', () => {
+    const { result } = renderHook(() => useSortState(), { 
+      wrapper: createWrapper(['/?sort=credits_used:desc'])
     });
-    expect(result.current.getSortDirection('credits_used')).toBe('asc');
     
-    // Second click: desc
-    act(() => {
-      result.current.toggleSort('credits_used');
-    });
-    expect(result.current.getSortDirection('credits_used')).toBe('desc');
-    
-    // Third click: none
-    act(() => {
-      result.current.toggleSort('credits_used');
-    });
-    expect(result.current.getSortDirection('credits_used')).toBe('none');
+    expect(result.current.sorting).toEqual([{ id: 'credits_used', desc: true }]);
   });
 
-  it('supports multiple column sorting', () => {
-    const { result } = renderHook(() => useSortState(), { wrapper });
-    
-    // Sort by credits_used ascending
-    act(() => {
-      result.current.toggleSort('credits_used');
+  it('supports multiple column sorting in URL', () => {
+    const { result } = renderHook(() => useSortState(), { 
+      wrapper: createWrapper(['/?sort=credits_used:asc,report_name:desc'])
     });
     
-    // Also sort by report_name ascending
+    expect(result.current.sorting).toEqual([
+      { id: 'credits_used', desc: false },
+      { id: 'report_name', desc: true },
+    ]);
+  });
+
+  it('setSorting updates URL params', () => {
+    const { result } = renderHook(() => useSortState(), { wrapper: createWrapper() });
+    
     act(() => {
-      result.current.toggleSort('report_name');
+      result.current.setSorting([{ id: 'credits_used', desc: false }]);
     });
     
-    expect(result.current.getSortDirection('credits_used')).toBe('asc');
-    expect(result.current.getSortDirection('report_name')).toBe('asc');
-    expect(result.current.sortState).toHaveLength(2);
+    expect(result.current.sorting).toEqual([{ id: 'credits_used', desc: false }]);
+  });
+
+  it('setSorting with empty array removes sort param', () => {
+    const { result } = renderHook(() => useSortState(), { 
+      wrapper: createWrapper(['/?sort=credits_used:asc'])
+    });
+    
+    act(() => {
+      result.current.setSorting([]);
+    });
+    
+    expect(result.current.sorting).toEqual([]);
+  });
+
+  it('setSorting with function updater works', () => {
+    const { result } = renderHook(() => useSortState(), { 
+      wrapper: createWrapper(['/?sort=credits_used:asc'])
+    });
+    
+    act(() => {
+      result.current.setSorting((prev) => [...prev, { id: 'report_name', desc: true }]);
+    });
+    
+    expect(result.current.sorting).toEqual([
+      { id: 'credits_used', desc: false },
+      { id: 'report_name', desc: true },
+    ]);
   });
 
 });
